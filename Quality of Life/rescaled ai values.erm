@@ -1,0 +1,31 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Divide all AI values by 15 in order to prevent negative values after gathering massive troops.
+; A significant issue of the script: The AI value of the hero and commanders is not rescaled, thus it might result in strange behavious for AI heroes
+; Warning: Not compatible with script that relies on AI values to work correctly!
+
+
+!?FU(OnAfterErmInstructions);
+!!FU(aivalue_RescaleAiValues):P;
+
+!?FU(aivalue_RescaleAiValues);
+; Check if the AI value of peasant is original - exit if not
+!!MA:I(MON_PEASANT)/?(aiValuePeasant:y);
+!!FU&(aiValuePeasant)<>15:E;
+
+; Get the id of the last monster
+!!VR(lastMon:y):S(MON_LAST_WOG);
+!!SN:L^amethyst2_4.dll^/?(amet2:y);     [compatiblity with TUM]
+
+!!if&(amet2)<>0;
+  !!UN:C5509220/4/?(lastMon);
+  !!VR(lastMon):-1;
+!!en;
+
+; Divide by 15 for all AI values
+!!re i/(MON_FIRST)/(lastMon);
+  !!MA:Ii/d:15;
+!!en;

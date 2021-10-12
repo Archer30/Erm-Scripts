@@ -1,0 +1,81 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, Third Upgrade Mod
+
+; Enhance all dragons' HP owned by Mutare in the battle by a percentage.
+; Enhance all third upgrade creatures owned by Mutare Drake.
+
+
+; ============== SETTINGS ==============
+!#VRi^mutare_DragonHPBonus^:S1;          [bonus HP percentage of dragons owned by Dragon specialist per hero level]
+!#VRi^mutare_3rdMonAtkBonus^:S1;
+!#VRi^mutare_3rdMonDefBonus^:S1;
+!#VRi^mutare_3rdMonDmgBonus^:S1;
+!#VRi^mutare_3rdMonHPBonus^:S1;
+; ============ END SETTINGS ============
+
+
+!?FU(OnBattleRound)&v997=0/i^Typhon_Third_Upgrade_Mod_Active^;
+!!BA:H(BATTLE_LEFT)/?(atkHero:y) H(BATTLE_RIGHT)/?(defHero:y);
+!!FU(mutare_GrantDragonBonuses)&(atkHero)=(HERO_MUTARE):P(atkHero)/(BATTLE_ATTACKER_STACK_FIRST);
+!!FU(mutare_GrantDragonBonuses)&(defHero)=(HERO_MUTARE):P(defHero)/(BATTLE_DEFENDER_STACK_FIRST);
+!!FU(mutare_Grant3rdMonBonuses)&(atkHero)=(HERO_MUTARE_DRAKE):P(atkHero)/(BATTLE_ATTACKER_STACK_FIRST);
+!!FU(mutare_Grant3rdMonBonuses)&(defHero)=(HERO_MUTARE_DRAKE):P(defHero)/(BATTLE_DEFENDER_STACK_FIRST);
+
+!?FU(mutare_GrantDragonBonuses);
+!#VA(hero:x) (firstStack:x);
+
+!!VR(lastStack:y):S(firstStack) +20;
+
+!!re i/(firstStack)/(lastStack);
+  ; Check for orginal hp of stacks, if zero - no mon
+  !!BMi:H?(hp:y);
+  !!co&(hp)<=0;
+
+  ; Check for dragon flag of the stack
+  !!BMi:F?(flag:y);
+  !!VR(isDragon:y):S(flag) &(MON_FLAG_DRAGON);
+  !!co&(isDragon)=(FALSE);
+
+  ; Add in bonus
+  !!HE(hero):Ed/?(lv:y)/1;                [no redrawing]
+  !!VR(bonus:y):Si^mutare_DragonHPBonus^ *(lv);
+  !!VR(hpNew:y):S(hp) *(bonus) :100 +(hp);
+  !!BMi:H(hpNew);
+!!en;
+
+!?FU(mutare_Grant3rdMonBonuses);
+!#VA(hero:x) (firstStack:x);
+
+!!VR(lastStack:y):S(firstStack) +20;
+
+!!re i/(firstStack)/(lastStack);
+  ; Check if the stack is a 3rd upgrade dungeon mon
+  !!BMi:T?(mon:y);
+  !!co|(mon)<(MON_TROGLODYTE)/(mon)>(MON_MINOTAUR);
+
+  ; Add in bonus
+  !!HE(hero):Ed/?(lv:y)/1;                [no redrawing]
+
+  !!BMi:A?(atk:y);
+  !!VR(atkBonus:y):Si^mutare_3rdMonAtkBonus^ *(lv);
+  !!VR(atkNew:y):S(atk) *(atkBonus) :100 +(atk);
+  !!BMi:A(atkNew);
+
+  !!BMi:D?(def:y);
+  !!VR(defBonus:y):Si^mutare_3rdMonDefBonus^ *(lv);
+  !!VR(defNew:y):S(def) *(atkBonus) :100 +(def);
+  !!BMi:D(defNew);
+
+  !!BMi:U1/?(dmgMin:y) U2/?(dmgMax:y);
+  !!VR(dmgBonus:y):Si^mutare_3rdMonDmgBonus^ *(lv);
+  !!VR(dmgMinNew:y):S(dmgMin) *(dmgBonus) :100 +(dmgMin);
+  !!VR(dmgMaxNew:y):S(dmgMax) *(dmgBonus) :100 +(dmgMax);
+  !!BMi:U1/(dmgMinNew) U2/(dmgMaxNew);
+
+  !!BMi:H?(hp:y);
+  !!VR(hpBonus:y):Si^mutare_3rdMonHPBonus^ *(lv);
+  !!VR(hpNew:y):S(atk) *(hpBonus) :100 +(hp);
+  !!BMi:H(hpNew);
+!!en;

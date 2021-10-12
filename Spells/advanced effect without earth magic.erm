@@ -1,0 +1,36 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Allows you to cast Resurrection and Town Portal with advanced effect without Earch Magic
+
+
+; ============== SETTINGS ==============
+!#VRi^noearth_TownPortal_on^:S(TRUE);
+!#VRi^noearth_Resurrection_on^:S(TRUE);
+; ============ END SETTINGS ============
+
+
+!?FU(OnStartOrLoad);
+!!if&i^noearth_resurrection_on^;
+  !!UN:C5905544/(UNC_INT8)/?i^noearth_resurrection_origin^;
+  !!UN:C5905544/(UNC_INT8)/235;
+!!en;
+
+!!if&i^noearth_townPortal_on^;
+  !!UN:C4314837/(UNC_INT)/?i^noearth_resurrection_origin1^;
+  !!UN:C4314841/(UNC_INT16)/?i^noearth_resurrection_origin2^;
+  !!UN:C4314837/(UNC_INT)/2425393296;
+  !!UN:C4314841/(UNC_INT16)/37008;
+!!en;
+
+!?FU(OnGameLeave);
+!!if&i^noearth_resurrection_on^;
+  !!UN:C5905544/(UNC_INT8)/i^noearth_resurrection_origin^;
+!!en;
+
+!!if&i^noearth_townPortal_on^;
+  !!UN:C4314837/(UNC_INT)/i^noearth_resurrection_origin1^;
+  !!UN:C4314841/(UNC_INT16)/i^noearth_resurrection_origin2^;
+!!en;

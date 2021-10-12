@@ -1,0 +1,18 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Allows Mutare Drake to upgrade all dragons (except for necro) to Azure Dragon.
+
+
+!?FU(OnDetermineMonInfoDlgUpgrade);
+!#VA(monType:x) (upgType:x) (town:x) (hero:x);
+
+; Exit the function if not Mutare Drake
+!!FU&(hero)<>(HERO_MUTARE_DRAKE):E;
+
+; Upgrade any Dragon from green dragon family or red dragon family to Azure Dragon
+!!if|(monType)=(MON_RED_DRAGON)/(monType)=(MON_GREEN_DRAGON)/(monType)=(MON_BLACK_DRAGON)/(monType)=(MON_GOLD_DRAGON)/(monType)=(MON_DARKNESS_DRAGON)/(monType)=(MON_DIAMOND_DRAGON);
+  !!VR(upgType):S(MON_AZURE_DRAGON);
+!!en;

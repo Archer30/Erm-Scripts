@@ -1,0 +1,31 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Instantly win the battle with a hotkey
+
+
+; ============== SETTINGS ==============
+!#VRi^winbatl_on^:S(TRUE);              [This script will be activated only if true]
+!#VRi^winbatl_key^:S(KEY_M);            [Change "M" to any hotkey you like]
+; ============ END SETTINGS ============
+
+
+!?FU(winbatl_RestrainValues);
+!!VRi^winbatl_on^:F(FALSE)/(TRUE);
+!!VRi^winbatl_key^:F(KEY_BACKSPACE)/(KEY_OEM_CLEAR);
+
+!#FU(winbatl_RestrainValues):P;
+
+!?FU(OnKeyPressed_Battle)&i^winbatl_on^/i^key^=i^winbatl_key^;
+!#VA(key:x) (preventDefault:x) (isDown:x);
+
+!!VR(preventDefault):S(TRUE);
+
+!!OW:C?(playerTurn:y)/?(playerPressed:y);
+!!BA:O?(attaker:y)/?(defender:y);
+
+!!BU&(attaker)=(playerPressed):V1;
+!!BU&(defender)=(playerPressed):V0;
+

@@ -1,0 +1,25 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Extend the duration of Force Shield and Fire Wall spells
+
+
+; ============== SETTINGS ==============
+!#VRi^longeff_on^:S(TRUE);              [This script will be activated only if true]
+!#VRi^longeff_forceShield^:S4;          [duration of Force Shield. Default = 2]
+!#VRi^longeff_fireWall^:S4;             [duration of Fire Wall. Default = 2]
+; ============ END SETTINGS ============
+
+
+!?FU(OnStartOrLoad)&i^longeff_on^;
+!!UN:C5901022/(UNC_INT)/?i^longeff_forceShield_origin^;
+!!UN:C5901022/(UNC_INT)/i^longeff_forceShield^;
+
+!!UN:C5901337/(UNC_INT)/?i^longeff_fireWall_origin^;
+!!UN:C5901337/(UNC_INT)/i^longeff_fireWall^;
+
+!?FU(OnGameLeave)&i^longeff_on^;
+!!UN:C5901022/(UNC_INT)/i^longeff_forceShield_origin^;
+!!UN:C5901337/(UNC_INT)/i^longeff_fireWall_origin^;

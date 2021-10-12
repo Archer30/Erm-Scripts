@@ -1,0 +1,23 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Makes all spell buffs become massive effect at expert level
+
+
+!?FU(OnAfterErmInstructions);
+!!FU(massBuff_ChangeSpellToMass):P(SPELL_FIRE_SHIELD);
+!!FU(massBuff_ChangeSpellToMass):P(SPELL_ANTI_MAGIC);
+!!FU(massBuff_ChangeSpellToMass):P(SPELL_MAGIC_MIRROR);
+!!FU(massBuff_ChangeSpellToMass):P(SPELL_SLAYER);
+!!FU(massBuff_ChangeSpellToMass):P(SPELL_FRENZY);
+!!FU(massBuff_ChangeSpellToMass):P(SPELL_HYPNOTIZE);
+!!FU(massBuff_ChangeSpellToMass):P(SPELL_BLIND);
+
+!?FU(massBuff_ChangeSpellToMass);
+!#VA(spell:x);
+
+!!SS(spell):F?(flag:y);
+!!VR(flagNew:y):S(flag) |64 |16 -16;
+!!SS(spell):F(flagNew);

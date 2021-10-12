@@ -1,0 +1,147 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; A replacement for the buggy HE:F1 command. Mainly for compatility with Enhanced Commander Artifact Option (219).
+
+
+**** Testing Section ****
+; Check values of the two function for calculating basic primary skills by pressing 0
+*?FU(OnKeyPressed)&i^key^=(KEY_0);
+*#VA(key:x) (preventDefault:x);
+*!VR(preventDefault):S(TRUE);
+
+*!FU(arch_artBonusesTable):P;
+*!OW:C?(player:y);
+*!OW:A(player)/?(hero:y);
+*!FU(arch_GetBasicPrimarySkills):P(hero)/?(atk:y)/?(def:y)/?(pwr:y)/?(knl:y);
+*!FU(GetHeroPrimarySkillsWithoutArts):P(hero)/?(atkAlt:y)/?(defAlt:y)/?(pwrAlt:y)/?(knlAlt:y);
+
+*!IF:M^New HE:F1 values: %(atk) %(def) %(pwr) %(knl)
+
+Era Erm Framework values: %(atkAlt:y) %(defAlt:y) %(pwrAlt:y) %(knlAlt:y)^;
+
+; Experience the bug with the "good old" HE:F1 (Requires WoG Scripts) by pressing 9
+*?FU(OnKeyPressed)&i^key^=(KEY_9);
+*#VA(key:x) (preventDefault:x);
+*!VR(preventDefault):S(TRUE);
+
+*!UN:P219/(TRUE);
+*!OW:C?(player:y);
+*!OW:A(player)/?(hero:y);
+
+; give Dragon Eye Ring to current active hero, check primary skills with and without artifacts
+*!HE(hero):A4/(ART_DRAGON_EYE_RING) F?(atk:y)/?(def:y)/?(pwr:y)/?(knl:y)/1 F?(atkArt:y)/?(defArt:y)/?(pwrArt:y)/?(knlArt:y);
+*!IF:M^Basic PS (HE:F1): %(atk) %(def) %(pwr) %(knl)
+PS with arts: %(atkArt) %(defArt) %(pwrArt) %(knlArt)^;
+**** End Testing Section ****
+
+
+!?FU(arch_GetBasicPrimarySkills);
+!#VA(hero:x) (attack:x) (defence:x) (power:x) (knowledge:x);
+
+; Temporarily disable Enhanced Commander Artifact option
+!!UN:P219/?(enhCmdArtOn:y);
+!!UN:P219/(FALSE);
+
+; Get primary skills with artifacts
+!!HE(hero):F?(attack)/?(defence)/?(power)/?(knowledge);
+
+!!re (slot:y)/(ART_SLOT_HEAD)/(ART_SLOT_MISC_5);
+  !!co&(slot)>=(ART_SLOT_MISC_1)/(slot)<=(ART_SLOT_SPELL_BOOK);
+
+  !!HE(hero):A1/?(artifact:y)/(slot);
+  !!co&(artifact)<=(NO_ART);
+
+  ; Reduce bonuses from equipped artifacts
+  !!SN:Mi^arch_artBonusesTable^/(artifact)/?(packedValue:y);
+  !!FU(UnpackUnion):P(packedValue)/?(atkBonus:y)/8/?(defBonus:y)/8/?(pwrBonus:y)/8/?(knlBonus:y)/8;
+  !!VR(attack): -(atkBonus);
+  !!VR(defence): -(defBonus);
+  !!VR(power): -(pwrBonus);
+  !!VR(knowledge): -(knlBonus);
+!!en;
+
+; Restore Enhanced Commander Artifact option
+!!UN:P219/(enhCmdArtOn);
+
+!?FU(OnAfterErmInstructions);
+!!FU(NewIntArray):P(ART_LAST_WOG)/?i^arch_artBonusesTable^/(M_TEMP);
+
+!?FU(OnStartOrLoad);
+!!FU(arch_artBonusesTable):P;
+
+!?FU(arch_artBonusesTable);
+; Artifacts with attack bonuses
+!!FU(PackUnion):P2/8/0/8/0/8/0/8/?(packedValue7:y);
+!!FU(PackUnion):P3/8/0/8/0/8/0/8/?(packedValue8:y);
+!!FU(PackUnion):P4/8/0/8/0/8/0/8/?(packedValue9:y);
+!!FU(PackUnion):P5/8/0/8/0/8/0/8/?(packedValue10:y);
+!!FU(PackUnion):P6/8/0/8/0/8/0/8/?(packedValue11:y);
+!!FU(PackUnion):P12/8/-3/8/0/8/0/8/?(packedValue12:y);
+
+; Artifacts with defence bonuses
+!!FU(PackUnion):P0/8/2/8/0/8/0/8/?(packedValue13:y);
+!!FU(PackUnion):P0/8/3/8/0/8/0/8/?(packedValue14:y);
+!!FU(PackUnion):P0/8/4/8/0/8/0/8/?(packedValue15:y);
+!!FU(PackUnion):P0/8/5/8/0/8/0/8/?(packedValue16:y);
+!!FU(PackUnion):P0/8/6/8/0/8/0/8/?(packedValue17:y);
+!!FU(PackUnion):P-3/8/12/8/0/8/0/8/?(packedValue18:y);
+
+; Artifacts with knowledge bonuses
+!!FU(PackUnion):P0/8/0/8/0/8/1/8/?(packedValue19:y);
+!!FU(PackUnion):P0/8/0/8/0/8/2/8/?(packedValue20:y);
+!!FU(PackUnion):P0/8/0/8/0/8/3/8/?(packedValue21:y);
+!!FU(PackUnion):P0/8/0/8/0/8/4/8/?(packedValue22:y);
+!!FU(PackUnion):P0/8/0/8/0/8/5/8/?(packedValue23:y);
+!!FU(PackUnion):P0/8/0/8/-2/8/10/8/?(packedValue24:y);
+
+; Artifacts with power bonuses
+!!FU(PackUnion):P0/8/0/8/1/8/0/8/?(packedValue25:y);
+!!FU(PackUnion):P0/8/0/8/2/8/0/8/?(packedValue26:y);
+!!FU(PackUnion):P0/8/0/8/3/8/0/8/?(packedValue27:y);
+!!FU(PackUnion):P0/8/0/8/4/8/0/8/?(packedValue28:y);
+!!FU(PackUnion):P0/8/0/8/5/8/0/8/?(packedValue29:y);
+!!FU(PackUnion):P0/8/0/8/10/8/-2/8/?(packedValue30:y);
+
+; Artifacts with all basic primary skills bonuses
+!!FU(PackUnion):P1/8/1/8/1/8/1/8/?(packedValue31:y);
+!!FU(PackUnion):P2/8/2/8/2/8/2/8/?(packedValue32:y);
+!!FU(PackUnion):P3/8/3/8/3/8/3/8/?(packedValue33:y);
+!!FU(PackUnion):P4/8/4/8/4/8/4/8/?(packedValue34:y);
+!!FU(PackUnion):P5/8/5/8/5/8/5/8/?(packedValue35:y);
+!!FU(PackUnion):P6/8/6/8/6/8/6/8/?(packedValue36:y);
+
+; Power of the Dragon Father pieces
+!!FU(PackUnion):P1/8/1/8/0/8/0/8/?(packedValue37:y);
+!!FU(PackUnion):P2/8/2/8/0/8/0/8/?(packedValue38:y);
+!!FU(PackUnion):P3/8/3/8/0/8/0/8/?(packedValue39:y);
+!!FU(PackUnion):P4/8/4/8/0/8/0/8/?(packedValue40:y);
+!!FU(PackUnion):P0/8/0/8/1/8/1/8/?(packedValue41:y);
+!!FU(PackUnion):P0/8/0/8/2/8/2/8/?(packedValue42:y);
+!!FU(PackUnion):P0/8/0/8/3/8/3/8/?(packedValue43:y);
+!!FU(PackUnion):P0/8/0/8/4/8/4/8/?(packedValue44:y);
+
+; Combination artifacts
+!!FU(PackUnion):P3/8/3/8/3/8/6/8/?(packedValue128:y); [Armageddon's Blade]
+!!FU(PackUnion):P21/8/21/8/21/8/21/8/?(packedValue129:y); [Angelic Alliance]
+!!FU(PackUnion):P3/8/3/8/2/8/2/8/?(packedValue132:y); [Armor of the Damned]
+!!FU(PackUnion):P16/8/16/8/16/8/16/8/?(packedValue134:y); [Power of the Dragon Father]
+!!FU(PackUnion):P9/8/9/8/8/8/8/8/?(packedValue135:y); [Titan's Thunder]
+
+; WoG artifacts
+!!FU(PackUnion):P0/8/2/8/0/8/0/8/?(packedValue157:y); [Crimson Shield of Retribution]
+!!FU(PackUnion):P5/8/5/8/4/8/4/8/?(packedValue158:y); [Barbarian Lord's Axe of Ferocity]
+
+; Write in array
+!!SN:Vi^arch_artBonusesTable^/7/(packedValue7)/(packedValue8)/(packedValue9)/(packedValue10)/(packedValue11)/(packedValue12);
+!!SN:Vi^arch_artBonusesTable^/13/(packedValue13)/(packedValue14)/(packedValue15)/(packedValue16)/(packedValue17)/(packedValue18);
+!!SN:Vi^arch_artBonusesTable^/19/(packedValue19)/(packedValue20)/(packedValue21)/(packedValue22)/(packedValue23)/(packedValue24);
+!!SN:Vi^arch_artBonusesTable^/25/(packedValue25)/(packedValue26)/(packedValue27)/(packedValue28)/(packedValue29)/(packedValue30);
+!!SN:Vi^arch_artBonusesTable^/31/(packedValue31)/(packedValue32)/(packedValue33)/(packedValue34)/(packedValue35)/(packedValue36);
+!!SN:Vi^arch_artBonusesTable^/37/(packedValue37)/(packedValue38)/(packedValue39)/(packedValue40)/(packedValue41)/(packedValue42)/(packedValue43)/(packedValue44);
+!!SN:Vi^arch_artBonusesTable^/128/(packedValue128)/(packedValue129);
+!!SN:Mi^arch_artBonusesTable^/132/(packedValue132);
+!!SN:Vi^arch_artBonusesTable^/134/(packedValue134)/(packedValue135);
+!!SN:Vi^arch_artBonusesTable^/157/(packedValue157)/(packedValue158);

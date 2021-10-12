@@ -1,0 +1,36 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Grants bonus movement points based on settings for heroes owned by human players.
+
+
+; ============== SETTINGS ==============
+!#VRi^bonusmp_on^:S(TRUE);              [This script will be activated only if true]
+!#VRi^bonusmp_mult^:S2;                 [multiplier of movement points]
+!#VRi^bonusmp_static^:S1000;            [static bonus to movement points]
+!#VRi^bonusmp_heroLvMultPercent^:S1;    [hero level multiplier percentage. Bonus = i^bonusmp_heroLvMultPerMil^ / 100 * level]
+; ============ END SETTINGS ============
+
+
+!?FU(bonusmp_RestrainValues);
+!!VRi^bonusmp_mult^:F1/(INT_MAX);
+!!VRi^bonusmp_static^:S0/(INT_MAX);
+!!VRi^bonusmp_heroLvMultPercent^:S0/(INT_MAX);
+
+!#FU(bonusmp_RestrainValues):P;
+
+!?FU(OnEveryDay)&i^timerIsHuman^/i^bonusmp_on^;
+!!OW:C?(player:y);
+
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HEi:O?(owner:y);
+  !!co&(player)<>(owner);
+
+  !!HEi:Ed/?(lv:y)/1 G?(movement:y);   [1 - no redrawing]
+  !!VR(movementNew:y):S(movement) *i^bonusmp_mult^ +i^bonusmp_static^;
+  !!VR(movementLv:y):S(movement) *(lv) *i^bonusmp_heroLvMultPercent^ :100;
+  !!VR(movementNew):+(movementLv);
+  !!HEi:W(movementNew) G(movementNew);
+!!en;

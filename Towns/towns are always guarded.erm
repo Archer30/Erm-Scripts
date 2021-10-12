@@ -1,0 +1,55 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.4+, Era Erm Framework, WoG Scripts (80 base)
+
+; Give a 1st level creature native to the town if a town has no creatue at the end of a battle/turn.
+
+
+; ============== SETTINGS ==============
+!#VRi^townguards_on^:S(TRUE);           [This script will be activated only if true]
+; ============ END SETTINGS ============
+
+
+!?FU(townguards_RestrainValues);
+!!VRi^townguards_on^:F(FALSE)/(TRUE);
+
+!#FU(townguards_RestrainValues):P;
+
+!?FU(WOG_EndOfTurn)&i^townguards_on^;
+!#VA(x:y) (y:y) (z:y);
+
+!!OW:C?(player:y);
+!!VR(x):S-1;
+
+!!re i;                                 [loop though all towns]
+  !!UN:U(OBJ_TOWN)/(ANY_OBJ)/-1/(x)/(y)/(z);
+  !!br&(x)<0;
+
+  !!CA(x)/(y)/(z):O?(owner:y);
+  !!CA(x)/(y)/(z):H0/?(garrisonHero:y) H1/?(visitingHero:y); [check for garrison / visiting hero]
+  !!FU(townguards_EnsureTownsAreGuarded)&(player)=(owner)/(garrisonHero)=(NO_HERO)/(visitingHero)=(NO_HERO):P(x)/(y)/(z);
+!!en;
+
+!?FU(OnAfterBattleUniversal)&i^townguards_on^;
+!!OBi^battle_x^/i^battle_y^/i^battle_z^:T?(type:y);
+
+!!if&(type)=(OBJ_TOWN);
+  !!CAi^battle_x^/i^battle_y^/i^battle_z^:H0/?(garrisonHero:y) H1/?(visitingHero:y);
+  !!FU(townguards_EnsureTownsAreGuarded)&(garrisonHero)=(NO_HERO)/(visitingHero)=(NO_HERO):Pi^battle_x^/i^battle_y^/i^battle_z^;
+!!en;
+
+!?FU(townguards_EnsureTownsAreGuarded);
+!#VA(x:x) (y:x) (z:x);
+!#VA(firstLevelMons[9]:y);
+
+!!VR(firstLevelMons):C(MON_PIKEMAN)/(MON_CENTAUR)/(MON_GREMLIN)/(MON_IMP)/(MON_SKELETON)/(MON_TROGLODYTE)/(MON_GOBLIN)/(MON_GNOLL)/(MON_PIXIE);
+
+!!re (slotInd:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+  !!CA(x)/(y)/(z):M2/(slotInd)/?(monType:y)/?(monCount:y);
+
+  !!FU&(monType)<>(NO_MON):E;
+!!en;
+
+!!CA(x)/(y)/(z):T?(townType:y);       [Check type of the town if the town is with no army]
+!!CA(x)/(y)/(z):M2/(ARMY_SLOT_FIRST)/(firstLevelMons[townType])/1; [add in first level creature according to the type of town]

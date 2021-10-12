@@ -1,0 +1,38 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.1+, Era Erm Framework
+
+; Loop through all Dens of Thieves on the map and replaces them with useful objects
+
+
+; ============== SETTINGS ==============
+!#VRi^den2hill_on^:S(TRUE);        [This script will be activated only if true]
+!#VRi^den2hill_chance^:S50;        [Chance of Den - Hill Fort replacement]
+; ============ END SETTINGS ============
+
+
+!?FU(den2hill_RestrainValues);
+!!VRi^den2hill_on^:F(FALSE)/(TRUE);
+!!VRi^den2hill_chance^:F0/100;
+
+!#FU(den2hill_RestrainValues):P;
+
+!?FU(OnEveryDay)&i^timerOnce^=(TRUE)/i^timerDay^=1/i^den2hill_on^/i^den2hill_chance^>0;
+!!FU(den2hill_ReplaceDenswithHillForts):P;
+
+!?FU(den2hill_ReplaceDenswithHillForts);
+!#VA(x:y) (y:y) (z:y);
+
+!!VR(x:y):S-1;
+
+!!re i;
+  !!UN:U(OBJ_DEN_OF_THIEVES)/(ANY_OBJ)/-1/(x)/(y)/(z);
+  !!br&(x)<0;
+
+  !!VRf:S1 R99;                         [generate random value]
+  !!co&i^den2hill_chance^<f;            [jump to next object if no luck]
+
+  !!UN:O(x)/(y)/(z)/1;                  [remove Den of Thieves]
+  !!UN:I(x)/(y)/(z)/(OBJ_HILL_FORT)/0;  [add in Hill Fort]
+!!en;

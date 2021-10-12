@@ -1,0 +1,95 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, 77 wog - map rules
+
+; Hero's upgraded level 7 monsters become level 8 now costs resources for AI players.
+
+
+!?FU(OnStartOrLoad);
+!!FU(costupg_CalcUpgCost):P;
+
+!?FU(OnEveryDay)&i^timerIsAi^;
+!!FU(costupg_LoopAiArmies):P;
+
+!?FU(costupg_CalcUpgCost);
+; Check if auto upgrading Upgraded Lv 7 to Lv 8 is enabeld. Exit if negative.
+!!UN:P125/?(autoUpgOn:y);
+!!FU&(autoUpgOn)<>(TRUE):E;
+
+; Create arrays for Upgraded Lv 7, Lv 8 creatures and additional resources required for them
+!!FU(NewIntArray):P8/?i^costupg_upgLv7Array^/(M_TEMP); [array of upgraded lv 7 creaturers (only 8 IDs)]
+!!FU(Array_Fill):Pi^costupg_upgLv7Array^/(MON_ARCHANGEL)/14; [fill in the array with a number sequence, starts from Archangel, step 14]
+!!FU(Array_Push):Pi^costupg_upgLv7Array^/(MON_PHOENIX); [push the last creature id as it's not in the number sequence]
+
+!!FU(NewIntArray):P9/?(lv8MonArray:y);
+!!FU(Array_Fill):P(lv8MonArray)/(MON_SUPREME_ARCHANGEL)/1;
+
+!!FU(NewIntArray):P?i^costupg_extResArray^/(M_TEMP);
+!!FU(Array_Push):Pi^costupg_extResArray^/(RES_GEMS)/(RES_CRYSTAL)/(RES_GEMS)/(RES_MERCURY)/(RES_MERCURY)/(RES_SULFUR)/(RES_CRYSTAL)/(RES_SULFUR)/(RES_MERCURY);
+
+; Create arrays for the difference of gold and additoinal resrouces of Upgraded Lv 7 to Lv 8
+!!FU(NewIntArray):P?i^costupg_goldDiffArray^/(M_TEMP);
+
+!!FU(NewIntArray):P?i^costupg_extResDiffArray^/(M_TEMP);
+
+; Calculate the gold and resources difference for all 9 factions
+!!re i/(TOWN_FIRST)/(TOWN_LAST_WOG);
+  !!SN:Mi^costupg_upgLv7Array^/i/?(upgLv7Mon:y);
+  !!SN:M(lv8MonArray)/i/?(lv8Mon:y);
+  !!SN:Mi^costupg_extResArray^/i/?(extRes:y);
+
+  !!MA:C(upgLv7Mon)/(RES_GOLD)/?(goldUpgLv7:y);
+  !!MA:C(upgLv7Mon)/(extRes)/?(extResUpgLv7:y);
+  !!MA:C(lv8Mon)/(RES_GOLD)/?(goldLv8:y);
+  !!MA:C(lv8Mon)/(extRes)/?(extResLv8:y);
+
+  !!VR(goldDiff:y):S(goldLv8) -(goldUpgLv7);
+  !!VR(extResDiff:y):S(extResLv8) -(extResUpgLv7);
+
+  !!FU(Array_Push):Pi^costupg_goldDiffArray^/(goldDiff);
+  !!FU(Array_Push):Pi^costupg_extResDiffArray^/(extResDiff);
+!!en;
+
+!?FU(costupg_LoopAiArmies);
+; Check if auto upgrading upgraded Lv 7 to Lv 8 is enabeld. Exit if negative.
+!!UN:P125/?(autoUpgOn:y);
+!!FU&(autoUpgOn)<>(TRUE):E;
+
+!!OW:C?(player:y);
+
+; Loops through all slots of all heroes of current player
+!!re (hero:y)/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HE(hero):O?(owner:y);
+
+  !!re (slot:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST)&(player)=(owner);
+    !!HE(hero):C0/(slot)/?(mon:y)/?(qty:y);
+
+    ; Check if any slot has an upgraded Lv 7 creature
+    !!re (town:y)/(TOWN_FIRST)/(TOWN_LAST_WOG);
+      !!SN:Mi^costupg_upgLv7Array^/(town)/?(upgLv7Mon:y);
+
+      !!br&(mon)=(upgLv7Mon);
+    !!en;
+
+    ; Reduce resource if upgraded Lv 7 is found
+    !!if&(town)<=(TOWN_LAST_WOG);
+      ; Get the gold/additional resources difference and resoruces type for upgrades
+      !!SN:Mi^costupg_extResArray^/(town)/?(extRes:y);
+      !!SN:Mi^costupg_goldDiffArray^/(town)/?(goldDiff:y);
+      !!SN:Mi^costupg_extResDiffArray^/(town)/?(extResDiff:y);
+
+      ; Get the total amout of gold and additional resources difference of the slot
+      !!VR(goldDiffSum:y):S(qty) *(goldDiff);
+      !!VR(extResDiffSum:y):S(qty) *(extResDiff);
+
+      ; Reduce resource for the total difference of the slot, make sure everything's not negative
+      !!OW:R(player)/(RES_GOLD)/d-(goldDiffSum);
+      !!OW:R(player)/(RES_GOLD)/?(goldNew:y);
+      !!OW&(goldNew)<0:R(player)/(RES_GOLD)/0;
+      !!OW:R(player)/(extRes)/d-(extResDiffSum);
+      !!OW:R(player)/(extRes)/?(extResNew:y);
+      !!OW&(extResNew)<0:R(player)/(extRes)/0;
+    !!en;
+  !!en;
+!!en;

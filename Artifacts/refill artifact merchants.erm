@@ -1,0 +1,34 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Change artifact in arttifact merchant every day.
+
+
+; ============== SETTINGS ==============
+!#VRi^artmerc_on^:S(TRUE);               [This script will be activated only if true]
+; ============ END SETTINGS ============
+
+
+!?FU(OnEveryDay)&i^timerOnce^/i^artmerc_on^;
+!!FU(artmerc_ResetArtMerchants):P;
+
+!?FU(artmerc_ResetArtMerchants);
+!!re (slot:y)/0/6;
+  !!FU(artmerc_FindRandArts):P?(art:y);
+  !!UN:J7/(slot)/(art);
+!!en;
+
+!?FU(artmerc_FindRandArts);
+!#VA(art:x);
+
+!!UN:J6/-1/?(art);
+
+!!VR(flag:y):S(TRUE);
+!!VR(flag)&(art)<=(ART_FIRST_AID_TENT):S(FALSE); [warmachines and spells]
+!!VR(flag)&(art)>=(ART_ANGELIC_ALLIANCE)/(art)<=(ART_CORNUCOPIA):S(FALSE); [combi]
+!!VR(flag)&(art)>=(ART_HIGHLIGHTED_SLOT)/(art)<=(ART_ARTIFACT_LOCK):S(FALSE); [unused]
+!!VR(flag)&(art)>=(ART_BLANK_HELMET)/(art)<=(ART_LAST_WOG):S(FALSE); [unused]
+
+!!FU(artmerc_FindRandArts)&(flag)=(FALSE):P?(art);

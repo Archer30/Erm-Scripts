@@ -1,0 +1,26 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Convert Warlord's Banner to random treasure artifacts by Alt+left clicking on Hero's Screen.
+
+
+!?FU(OnHeroScreenMouseClick)&i^key_alt^/i^mouse_action^=(MOUSE_LMB_PRESSED);
+; Get clicked item, exit the function if not in backpack
+!!CM:I?(item:y);
+!!VR(slot:y):S(item) -21;
+!!FU&(slot)<19/(slot)>24:E;
+
+; Exit if not clicked on Warlord's Banner
+!!HE(CURRENT_HERO):A1/?(art:y)/(slot);
+!!FU&(art)<>(ART_WARLORDS_BANNER):E;
+
+!!CM:R(FALSE);
+
+; Replace Warlord's Banner with random treasure artifact
+!!UN:J6/(ART_LEVEL_TREASURE)/?(artNew:y);
+!!HE(CURRENT_HERO):A4/(artNew);
+!!HE(CURRENT_HERO):A3/(ART_WARLORDS_BANNER)/1/0;
+
+!!SN:D;

@@ -1,0 +1,51 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.4+, Era Erm Framework, WoG Scripts (80 base)
+
+; Give a 1st level creature native to the hero if a hero is with no creatue at the end of a battle/turn.
+
+
+; ============== SETTINGS ==============
+!#VRi^armedhero_on^:S(TRUE);            [This script will be activated only if true]
+; ============ END SETTINGS ============
+
+
+!?FU(armedhero_RestrainValues);
+!!VRi^armedhero_on^:F(FALSE)/(TRUE);
+
+!#FU(armedhero_RestrainValues):P;
+
+!?FU(OnGameEnter)&i^armedhero_on^;
+!!UN:C5102718/4/?(dismissLast:y);       [check if dismiss last stack is enabled]
+!!UN:C5968130/4/?(transferLast:y);      [check if transfer last stack is enabled]
+!!VRi^armedhero_on^|(dismissLast)<>2114058371/(transferLast)<>14844943:S(FALSE); [end function if hero without army is allowed]
+
+!?FU(OnAfterBattleUniversal)&i^armedhero_on^;
+!!BA:H0/?(heroLeft:y) H1/?(heroRight:y);
+!!FU(armedhero_EnsureHeroesHaveArmies)&(heroLeft)>(NO_HERO):P(heroLeft);
+!!FU(armedhero_EnsureHeroesHaveArmies)&(heroRight)>(NO_HERO):P(heroRight);
+
+!?FU(WOG_EndOfTurn)&i^armedhero_on^;
+!!OW:C?(player:y);
+
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HEi:O?(heroOwner:y);
+  !!FU(armedhero_EnsureHeroesHaveArmies)&(heroOwner)=(player):Pi;
+!!en;
+
+!?FU(armedhero_EnsureHeroesHaveArmies);
+!#VA(hero:x);
+!#VA(firstLevelMons[9]:y);
+
+!!VR(firstLevelMons):C(MON_PIKEMAN)/(MON_CENTAUR)/(MON_GREMLIN)/(MON_IMP)/(MON_SKELETON)/(MON_TROGLODYTE)/(MON_GOBLIN)/(MON_GNOLL)/(MON_PIXIE);
+
+!!re i/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST); [check for all slots of the hero]
+  !!HE(hero):C0/i/?(monType:y)/?(monCount:y);
+
+  !!FU&(monType)<>(NO_MON):E;
+!!en;
+
+!!HE(hero):B2/?(class:y);               [Check for type of hero if the hero is with no army]
+!!VR(townType:y):S(class) :2;
+!!HE(hero):C2/(firstLevelMons[townType])/1/0; [add in first level creature according to type of hero]

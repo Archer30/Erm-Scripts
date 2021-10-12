@@ -1,0 +1,13 @@
+ZVSE
+; Author:   Archer30
+; Engine:   ERM 1.0+
+; Requires: ERA 2.46+
+
+; Reset Utopia each time human players visiting and exiting
+
+
+!?OB25&1000;
+!!CB998:T0;
+
+!$OB25&1000;
+!!CB998:T0;
