@@ -1,7 +1,7 @@
 # Erm Scripts
 ERM scripts by players' requests
 
-## **How to use erm scripts in ERA 3?**
+## **How to use erm scripts in HoMM 3 ERA?**
 
 Simply save any script you like as an .erm file and place in this location:
 
