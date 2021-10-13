@@ -16,7 +16,7 @@ ZVSE2
 ; ============ END SETTINGS ============
 
 
-!?FU(OnBattleRound)&v997=0/i^Typhon_Third_Upgrade_Mod_Active^;
+!?FU(OnBattleRound)&i^battle_round^=0/i^Typhon_Third_Upgrade_Mod_Active^;
 !!BA:H(BATTLE_LEFT)/?(atkHero:y) H(BATTLE_RIGHT)/?(defHero:y);
 !!FU(mutare_GrantDragonBonuses)&(atkHero)=(HERO_MUTARE):P(atkHero)/(BATTLE_ATTACKER_STACK_FIRST);
 !!FU(mutare_GrantDragonBonuses)&(defHero)=(HERO_MUTARE):P(defHero)/(BATTLE_DEFENDER_STACK_FIRST);
