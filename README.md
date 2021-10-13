@@ -1,5 +1,5 @@
 # Erm-By-Requests
- Erm scripts by players' requests
+ERM scripts by players' requests
 
 ## **How to use erm scripts in ERA 3?**
 
