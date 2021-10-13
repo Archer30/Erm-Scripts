@@ -1,4 +1,4 @@
-# Erm Scripts
+# ERM Scripts
 ERM scripts by players' requests
 
 ## **How to use erm scripts in HoMM 3 ERA?**
