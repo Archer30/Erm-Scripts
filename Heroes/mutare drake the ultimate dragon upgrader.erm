@@ -3,7 +3,7 @@ ZVSE2
 ; Engine:   ERM 2.0+
 ; Requires: ERA 3.0+, Era Erm Framework
 
-; Allows Mutare Drake to upgrade all dragons (except for necro) to Azure Dragon.
+; Allows Mutare Drake to upgrade all dragons from Green Dragon family and Red Dragon family to Azure Dragon.
 
 
 !?FU(OnDetermineMonInfoDlgUpgrade);
