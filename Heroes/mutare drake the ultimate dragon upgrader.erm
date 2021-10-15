@@ -9,7 +9,7 @@ ZVSE2
 !?FU(OnDetermineMonInfoDlgUpgrade);
 !#VA(monType:x) (upgType:x) (town:x) (hero:x);
 
-; Exit the function if not Mutare Drake
+; Exit the trigger if not Mutare Drake
 !!FU&(hero)<>(HERO_MUTARE_DRAKE):E;
 
 ; Upgrade any Dragon from green dragon family or red dragon family to Azure Dragon
