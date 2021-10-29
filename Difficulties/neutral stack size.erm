@@ -1,0 +1,29 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Increase the stack size of all neutrals
+
+
+; ============== SETTINGS ==============
+!#VRi^neutral_sizeMult^:S10;            [Multiplier for neutral stack size]
+; ============ END SETTINGS ============
+
+
+!?FU(neutral_RestrainValues);
+!!VRi^neutral_sizeMult^:F1/(INT_MAX);
+
+!#FU(neutral_RestrainValues):P;
+
+!?FU(OnEveryDay)&i^timerOnce^/i^timerDay^=1/i^neutral_sizeMult^>1;
+!!VR(x:y):S-1;
+
+; loop through all neutrals
+!!re i;
+  !!UN:U(OBJ_MONSTER)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  ; multiply the quantity of the stack
+  !!MO(x)/(y)/(z):Gd*i^neutral_sizeMult^;
+!!en;
