@@ -8,7 +8,7 @@ ZVSE2
 
 ; ============== SETTINGS ==============
 !#VRi^0_tax_mon^:S(MON_PEASANT);        [creature that pays tax]
-!#VRi^0_tax_amount^:S1;                 [amount of tax they pay for every unit/day]
+!#VRi^0_tax_amount^:S1;                 [amount of gold generates from every unit/day]
 ; ============ END SETTINGS ============
 
 
