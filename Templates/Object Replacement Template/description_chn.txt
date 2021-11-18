@@ -1,0 +1,13 @@
+物体替换模板
+
+作者：Archer30、igrik
+
+
+用于创建你自己的物体替换脚本的ERM模板。
+所有的设置都在 游戏根目录\Mods\Object Replacement Template\Data\s\0 replace - specific object.erm中。
+
+要创建新的替换方案的话，只需要在0 replace - specific object.erm中设置你想要的数值即可。
+
+要创建2个或以上的替换方案时，需要你复制0 replace - specific object.erm在同一个路径中，并把“0”换成其他数字。在新脚本中也要搜索替换所有的“0_”为“其他数字_”（在文本编辑器中按“Ctrl+H”）。
+
+注意：Erm脚本会按照脚本名称的第一个字符的字符顺序依次执行。一般来说，0开头的脚本会比A开头的脚本更快执行，但比1开头的脚本慢。这个规律很重要，当你设置一个物体替换方案时，其中的替换的几率很大程度上取决于脚本的执行顺序。

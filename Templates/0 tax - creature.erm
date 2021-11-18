@@ -1,0 +1,31 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Your creature pays tax to you.
+
+
+; ============== SETTINGS ==============
+!#VRi^0_tax_mon^:S(MON_PEASANT);        [creature that pays tax]
+!#VRi^0_tax_amount^:S1;                 [amount of tax they pay for every unit/day]
+; ============ END SETTINGS ============
+
+
+!?FU(OnEveryDay)&i^timerOnce^;
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HEi:O?(owner:y);
+  !!co&(owner)<=(NO_PLAYER);
+
+  ; If the hero belongs to a player, look for the tax payers
+  !!re (slot:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!HEi:C0/(slot)/?(mon:y)/?(qty:y);
+    !!co&(mon)<>i^0_tax_mon^;
+
+    ; Found tax payers. Caculate the amount of tax and add to the owner
+    !!VR(bonusGold:y):S(qty) *i^0_tax_amount^;
+    !!OW:R(owner)/(RES_GOLD)/d(bonusGold);
+  !!en;
+!!en;
+
+!!UN:R2;

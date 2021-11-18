@@ -1,0 +1,51 @@
+ZVSE2
+; Author:   Archer30, igrik
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Function of specific map object.
+
+
+; ============== SETTINGS ==============
+!#VRi^0_replace_chancePercent^:S20;     [Chance of replacement]                              | [替换的概率]
+;                                                                                            |
+!#VRi^0_replace_originalType^:S17;      [type of object being replaced]                      | [被替换的物体类型]
+!#VRi^0_replace_originalSubtype^:S73;   [subtype of object being replace. -1 for any object] | [被替换的物体子类型。-1表示任意类型]
+!#VRi^0_replace_targetType^:S35;        [type of object to be replaced with]                 | [替换后的物体类型]
+!#VRi^0_replace_targetSubtype^:S0;      [subtype of object repalced with]                    | [替换后的物体子类型]
+;                                                                                            |
+!#VRi^0_replace_xCoordOffset^:S0;       [optional. Horizontal offset of the targeted object] | [可选。替换后的物体的水平方向偏移]
+!#VRi^0_replace_yCoordOffset^:S0;       [optional. Vertical offset of the targeted object]   | [可选。替换后的物体的垂直方向偏移]
+; ============ END SETTINGS ============
+
+
+!?FU(replace_OnIterateAllMapObjects)&i^0_replace_chancePercent^>0;
+!#VA(x:x) (y:x) (z:x);
+!#VA(objType:x);
+!#VA(objSubtype:x);
+!#VA(isYellowSquare:x);                 [boolean]
+!#VA(isPassable:x);                     [boolean]
+
+; check: is entry to the object
+!!FU&(isYellowSquare)<>(TRUE):E;
+
+; init var replacement
+!!VR(replace:y):S(FALSE);
+
+; check objects
+!!if&(objType)=i^0_replace_originalType^;
+  !!VR(replace)|(objSubtype)=i^0_replace_originalSubtype^/i^0_replace_originalSubtype^=(ANY_OBJ):S(TRUE);
+!!en;
+
+; exit if not searchable types
+!!FU&(replace)<>(TRUE):E;
+
+; generate a random number
+!!VR(random:y):R0/1/100; 
+!!FU&(random)>i^0_replace_chancePercent^:E;
+
+; delete current and create a new object
+!!UN:O(x)/(y)/(z)/1/0; 
+!!VR(x):+i^0_replace_xCoordOffset^;
+!!VR(y):+i^0_replace_yCoordOffset^;
+!!UN:I(x)/(y)/(z)/i^0_replace_targetType^/i^0_replace_targetSubtype^/0;
