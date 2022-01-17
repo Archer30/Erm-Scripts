@@ -1,0 +1,79 @@
+ZVSE2
+; Author:   Archer30
+; Special thanks to Berserker for the solution of displaying IF:L msg silently
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Geerate a random number and show on the screen by pressing 0. 
+; The chance of getting the ideal result is increased for everytime the odds is not favoured.
+
+
+; ============== SETTINGS ==============
+!#VRi^rand_basicChance^:S20;
+!#VRi^rand_additionalChance^:S1;
+; ============ END SETTINGS ============
+
+
+!?FU(rand_InitialiseValues);
+!!VRi^rand_basicChance^:F0/100;
+!!VRi^rand_additionalChance^:F0/100;
+
+!!VRi^rand_dynamicOdds^:Si^rand_basicChance^;
+
+!#FU(rand_InitialiseDynRandom);
+
+!?FU(OnKeyPressed)&i^key^=(KEY_0);
+!#VA(key:x) (preventDefault:x);
+
+!!VR(preventDefault):S(TRUE);
+; Check if the odds is desirable
+!!FU(rand_GetRandomResult):P?(random:y)/?(result:y);
+; Show info on the screen
+!!VRz1:S^Dynamic odds: %i(rand_dynamicOdds), Random number: %(random).^;
+!!VRz1&(result):+^ Bingo!^;
+
+; Play with sound if the result is desirable. Restore the dynamic odds or increase depending on the result
+!!if&(result);
+  !!IF:Lz1;
+  !!VRi^rand_dynamicOdds^:Si^rand_basicChance^;
+!!el;
+  !!FU(rand_QuietMessage):P;
+  !!VRi^rand_dynamicOdds^:+i^rand_additionalChance^;
+!!en;
+
+!?FU(rand_GetRandomResult);
+!#VA(random:x) (result:x);                         [boolean]
+
+!!VR(result):S(FALSE);
+; Generate a random number and check if it reaches the ideal range
+!!VR(random):R0/0/100;
+!!VR(min:y):S100 -i^rand_dynamicOdds^;
+
+!!VR(result)&(random)>=(min):S(TRUE);
+
+!?FU(rand_QuietMessage);                [Berserker]
+; Arguments: Message: z1;
+!!VRy1:Sv2;
+
+!!FU(rand_SoundControl):P0/2;
+!!IF:Lz1;
+!!FU(rand_SoundControl):P1/2;
+
+!!VRv2:Sy1;
+
+!?FU(rand_SoundControl);
+; Arguments: SoundIsOn: boolean; OldValue: v-index
+!!if&x1=1;
+  !!VRy4:Svx2;
+  !!VRy1:Sy4%256;
+  !!VRy4::256;
+  !!VRy2:Sy4%256;
+  !!VRy4::256;
+  !!VRy3:Sy4%256;
+  !!UN:C6916016/1/y1 C6916020/1/y2 C6916028/1/y3;
+!!el;
+  !!UN:C6916016/1/?y1 C6916020/1/?y2 C6916028/1/?y3 C6916016/1/0 C6916020/1/0 C6916028/1/0;
+  !!VRy3:*65536;
+  !!VRy2:*256;
+  !!VRvx2:Sy1+y2+y3;
+!!en;
