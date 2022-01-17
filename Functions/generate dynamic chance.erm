@@ -23,7 +23,7 @@ ZVSE2
 !!VR(min:y):S100 -i^rand_%z(itemName)_dynOdds^;
 
 ; Generate a random number and check if it reaches the ideal range
-!!VR(random):R0/1/100;
+!!VR(random):R0/1/100;                  [random numb from 1 to 100]
 !!VR(result)&(random)>=(min):S(TRUE);
 
 ; Restore the dynamic odds or increase depending on the result
@@ -44,7 +44,7 @@ ZVSE2
 
 ; Show info on the screen. Play with sound if the result is desirable. 
 !!VR(dynamicOdds:y):Si^rand_test_dynOdds^;
-!!VRz1:S^Random number: %(random). Dynamic odds for next: %(dynamicOdds).^;
+!!VRz1:S^Random number: %(random). Dynamic odds for next: %(dynamicOdds)%.^;
 
 !!if&(result);
   !!VRz1:+^ {Bingo!}^;
