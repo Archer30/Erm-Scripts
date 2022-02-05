@@ -1,0 +1,47 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Function for creating mithril specialists
+; This is a tempory fix of HE:X2 mithril specialty for ERA ealier than 3.9.2. It might be redundant in the later versions.
+
+
+!?FU(mith_SetUpMithrilSpecs);
+; Exit the function if no argument
+!!FU:A?(numArgs:y);
+!!FU&(numArgs)<=0:E;
+
+; Set up mithril specs
+!!VR(numMithSpecs:y):S0;
+
+!!re (xInd:y)/1/(numArgs);
+  !!if&x(xInd)>=(HERO_FIRST)/x(xInd)<=(HERO_LAST_WOG);
+    !!HEx(xInd):X2/(RES_MITHRIL);
+    !!VR(numMithSpecs):+1;
+  !!el;
+    !!IF:M^Invalid hero ID: %x(xInd)^;
+  !!en;
+!!en;
+
+!!VRi^mith_numMithSpecs^:S(numMithSpecs);
+
+!?FU(OnEveryDay)&i^timerOnce^/i^timerDay^>1/i^mith_numMithSpecs^>0;
+; Increase 1 mithril for every owner of mithril specialists
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HEi:O?(owner:y);
+
+  !!if&(owner)<>(NO_OWNER);
+    !!HEi:X?(specType:y)/?(specSubtype:y);
+
+    !!if&(specType)=2/(specSubtype)=(RES_MITHRIL); [subtype = 2 for adding extra resources]
+      !!OW&(owner)<>(NO_OWNER):R(owner)/(RES_MITHRIL)/d1;
+    !!en;
+  !!en;
+!!en;
+
+; ============== TESTING ==============
+!?FU(OnAfterErmInstructions);
+; Please input any number (1 to 15) of heroes as arguments here
+!!FU(mith_SetUpMithrilSpecs):P(HERO_RISSA)/(HERO_NAGASH)/(HERO_SOLMYR);
+; ============ END TESTING ============
