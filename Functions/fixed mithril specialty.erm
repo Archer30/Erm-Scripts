@@ -8,6 +8,7 @@ ZVSE2
 
 
 !?FU(mith_SetUpMithrilSpecs);
+; Arguments - any number (1 to 15) of heroe IDs
 ; Exit the function if no argument
 !!FU:A?(numArgs:y);
 !!FU&(numArgs)<=0:E;
@@ -35,7 +36,7 @@ ZVSE2
     !!HEi:X?(specType:y)/?(specSubtype:y);
 
     !!if&(specType)=2/(specSubtype)=(RES_MITHRIL); [subtype = 2 for adding extra resources]
-      !!OW&(owner)<>(NO_OWNER):R(owner)/(RES_MITHRIL)/d1;
+      !!OW:R(owner)/(RES_MITHRIL)/d1;
     !!en;
   !!en;
 !!en;
