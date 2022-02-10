@@ -1,0 +1,16 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Remove buggy neutral stacks by mouse hovering. Occasionally a stack with the size 4095 is generated on the map with UN:I command. 
+
+
+!?FU(OnAdvMapTileHint);
+!#VA(x:x) (y:x) (z:x) (objType:x) (objSubtype:x);
+
+!!if&(objType)=(OBJ_MONSTER);
+  !!VR(qty:y):S0;
+  !!MO(x)/(y)/(z):G?(qty);
+  !!UN&(qty)<=0:O(x)/(y)/(z);
+!!en;
