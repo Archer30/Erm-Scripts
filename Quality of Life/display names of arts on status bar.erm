@@ -1,0 +1,16 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Display the names of artifacts on status bar when hovering over.
+
+
+!?FU(OnAfterErmInstructions);
+!!FU(GetMaxArtifactId):P?(lastArt:y);
+!!VR(lastArt):F(ART_LAST_WOG)/999;
+
+!!re i/(ART_FIRST)/(lastArt);
+  !!SN:H^art^/i/0/?(artName:z);
+  !!SN:H^object^/(OBJ_ARTIFACT)/i/(artName);
+!!en;
