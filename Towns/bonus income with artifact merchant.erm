@@ -1,0 +1,21 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Bonus income for artifact merchant builder, compatible with town income display
+
+
+; ============== SETTINGS ==============
+!#VRi^artMerch_bonusIncome^:S500;
+; ============ END SETTINGS ============
+
+
+!?FU(OnCalculateTownIncome);
+!#VA(townId:x) (income:x) (silo:x);
+
+!!CA0/(townId):T?(townType:y) B3/17;
+
+!!if|(townType)=(TOWN_TOWER)/(townType)=(TOWN_DUNGEON)/(townType)=(TOWN_CONFLUX);
+  !!VR(income)&1:+i^artMerch_bonusIncome^;
+!!en;
