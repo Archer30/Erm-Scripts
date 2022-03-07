@@ -1,0 +1,39 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Josephine now is able to convert her Diamond Golem to Gold or Gems.
+
+
+!?FU(OnHeroScreenMouseClick)&i^mouse_action^=(MOUSE_RMB_PRESSED)/i^mouse_item^>=68/i^mouse_item^<=74/999;
+!!CM:H?(hero:y)/?(heroLeft:y);
+!!FU&(hero)<>(HERO_JOSEPHINE):E;
+
+!!VR(slot:y):Si^mouse_item^ -68;
+!!HE(hero):C0/(slot)/?(mon:y)/?(qty:y);
+
+!!if&(mon)=(MON_DIAMOND_GOLEM)/(qty)>0;
+  !!VR(gold:y):S(qty) *1500;
+  !!VR(gems:y):S(qty) *1;
+
+  !!if&(qty)=0;
+    !!SN:H^monname^/(MON_DIAMOND_GOLEM)/0/?(diamondStr:z);
+  !!el;
+    !!SN:H^monname^/(MON_DIAMOND_GOLEM)/1/?(diamondStr:z);
+  !!en;
+
+  !!IF:N(PIC_TYPE_MONSTER)/(MON_DIAMOND_GOLEM)/(PIC_TYPE_RES_GOLD)/(gold)/(PIC_TYPE_RES_GEMS)/(gems) N(MSG_TYPE_CHOOSE_PIC_OR_CANCEL)/^Would you like to turn %(qty) %(diamondStr) into a small amout of resources?^/?(choice:y)/(TEXT_ALIGN_CENTER)/(DLG_NO_SELECTION)/6;
+
+  !!if&(choice)=1;
+    !!OW:R(CURRENT_PLAYER)/(RES_GOLD)/d(gold);
+  !!el&(choice)=2;
+    !!OW:R(CURRENT_PLAYER)/(RES_GEMS)/d(gems);
+  !!en;
+
+  !!if|(choice)=1/(choice)=2;
+    !!HE(hero):C0/(slot)/(NO_MON)/0;
+    !!SN:D;
+    !!UN:R2;
+  !!en;
+!!en;
