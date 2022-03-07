@@ -1,0 +1,50 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, Third Upgrade Mod
+
+; Enhance all Spell Weavers lead by Dracon with 2.5% of the original stats per hero level. Max at 100% bonuses.
+
+
+; ============== SETTINGS ==============
+!#VRi^dracon_SpellWeaverBonus^:S25;          [bonus stats ‰ of spell weavers owned by Dracon]
+; ============ END SETTINGS ============
+
+
+!?FU(OnSetupBattlefield)&i^Typhon_Third_Upgrade_Mod_Active^;
+!!FU(arch_GrantMonBonuses):Pi^battle_hero_0^/(BATTLE_ATTACKER_STACK_FIRST);
+!!FU(arch_GrantMonBonuses):Pi^battle_hero_1^/(BATTLE_DEFENDER_STACK_FIRST);
+
+!?FU(arch_GrantMonBonuses);
+!#VA(hero:x) (firstStack:x);
+
+!!FU&(hero)<>(HERO_DRACON):E;
+
+
+!!VR(lastStack:y):S(firstStack) +20;
+
+!!re i/(firstStack)/(lastStack);
+  ; Check for creature type and quantity, next creature if condition does not met
+  !!BMi:T?(type:y) N?(qty:y);
+  !!co|(type)<>259/(qty)<=0;            [259 - Spell Weaver]
+
+  ; Calculate bonuses per mill
+  !!HE(hero):Ed/?(lv:y)/1;              [no redrawing]
+  !!VR(bonusPm:y):Si^dracon_SpellWeaverBonus^ *(lv); [Calculate the bonus]
+  !!VR(bonusPm):F0/1000;                [not more than 100%]
+  ; Get original stats
+  !!BMi:A?(atk:y) D?(def:y) U1/?(minDmg:y) U2/?(maxDmg:y) H?(hp:y);;
+  ; Calculate new stats
+  !!FU(arch_GetImprovedStats):P(atk)/(bonusPm)/?(newAtk:y);
+  !!FU(arch_GetImprovedStats):P(def)/(bonusPm)/?(newDef:y);
+  !!FU(arch_GetImprovedStats):P(minDmg)/(bonusPm)/?(newMinDmg:y);
+  !!FU(arch_GetImprovedStats):P(maxDmg)/(bonusPm)/?(newMaxDmg:y);
+  !!FU(arch_GetImprovedStats):P(hp)/(bonusPm)/?(newHp:y);
+  ; Apply new stats
+  !!BMi:A(newAtk:y) D(newDef:y) U1/(newMinDmg:y) U2/(newMaxDmg:y) H(newHp:y);;
+!!en;
+
+!?FU(arch_GetImprovedStats);
+!#VA(stats:x) (bonusPm:x) (newStats:x);
+
+!!VR(newStats):S(stats) *(bonusPm) :1000 +(stats);

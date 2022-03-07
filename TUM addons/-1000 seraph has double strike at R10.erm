@@ -1,0 +1,18 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, Third Uprgrade Mod
+
+; Restore the stack experience ability of Seraph in TUM.
+
+
+!?FU(OnAfterErmInstructions)&i^Typhon_Third_Upgrade_Mod_Active^;
+; Get the creature ID of Seraph
+!!FU(GetUpgradedMonster):P(MON_SUPREME_ARCHANGEL)/?(seraph:y);
+!!EA(seraph):F0/?(firstEmptySlot:y);
+
+; Add the Double Strike ability only when there is an availabel slot
+; 102 - ability with a flag, 68 - double strike
+!!if&(firstEmptySlot)<=14;
+  !!EA(seraph):B(firstEmptySlot)/(TRUE)/102/68/(FALSE)/(FALSE)/(FALSE)/(FALSE)/(FALSE)/(FALSE)/(FALSE)/(FALSE)/(FALSE)/(FALSE)/(TRUE);
+!!en;
