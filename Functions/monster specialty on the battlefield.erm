@@ -1,0 +1,52 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, Third Upgrade Mod
+
+; Function for boosting the stats of creatures leading by its specialist on the battlefield;
+; Bonuse per mile - This value would be used on Attack, Defense, Damage and Health of the targeted creature
+; If bonus per mile = 25, all the spec creature will be boosted by 2.5% of their original stats.
+
+
+!?FU(arch_GrantMonSpecBonuses);
+!#VA(hero:x);
+!#VA(mon:x);
+!#VA(bonusPm:x);                        [Bonuses per mile. This value would be used on Attack, Defense, Damage and Health of the targeted creature]
+
+!!re i/(BATTLE_LEFT)/(BATTLE_RIGHT);
+  !!co&i^battle_hero_%i^<>(hero);
+
+  !!if&i=(BATTLE_LEFT);
+    !!VR(firstStack:y):S(BATTLE_ATTACKER_STACK_FIRST);
+    !!VR(lastStack:y):S(BATTLE_ATTACKER_STACK_LAST);
+  !!el;
+    !!VR(firstStack):S(BATTLE_DEFENDER_STACK_FIRST);
+    !!VR(lastStack):S(BATTLE_DEFENDER_STACK_LAST);
+  !!en;
+
+  !!re (stack:y)/(firstStack)/(lastStack);
+    ; Check for creature type and quantity, next creature if condition does not met
+    !!BM(stack):T?(type:y) N?(qty:y);
+    !!co|(type)<>(mon)/(qty)<=0;
+
+    ; Calculate bonuses per mill
+    !!HE(hero):Ed/?(lv:y)/1;            [no redrawing]
+    !!VR(totalBonusPm:y):S(bonusPm) *(lv); [Calculate the bonus]
+    !!VR(totalBonusPm):F0/1000;         [not more than 100%]
+    ; Get original stats
+    !!BM(stack):A?(atk:y) D?(def:y) U1/?(minDmg:y) U2/?(maxDmg:y) H?(hp:y);;
+    ; Calculate new stats
+    !!VR(newAtk:y):S(atk) *(totalBonusPm) :1000 +(atk);
+    !!VR(newDef:y):S(def) *(totalBonusPm) :1000 +(def);
+    !!VR(newMinDmg:y):S(minDmg) *(totalBonusPm) :1000 +(minDmg);
+    !!VR(newMaxDmg:y):S(maxDmg) *(totalBonusPm) :1000 +(maxDmg);
+    !!VR(newHp:y):S(hp) *(totalBonusPm) :1000 +(hp);
+    ; Apply new stats
+    !!BM(stack):A(newAtk) D(newDef) U1/(newMinDmg) U2/(newMaxDmg) H(newHp);;
+  !!en;
+!!en;
+
+; ========================== TESTING ==========================
+
+!?FU(OnSetupBattlefield);
+!!FU(arch_GrantMonSpecBonuses):P(HERO_DRACON)/259/25;
