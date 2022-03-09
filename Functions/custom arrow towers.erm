@@ -1,0 +1,18 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Funcion for custoomizing the shoorters on arrow towers.
+
+
+!?FU(arrow_ChangeArrowTowerShooters);
+!#VA(townType:x) (mon:x);
+
+!!VR(address:y):S32 *(townType) +6541192;
+!!UN:C(townType)/1/(mon);
+
+; ========================== TESTING ==========================
+
+!?FU(OnStartOrLoad)&y1<>y1;
+!!FU(arrow_ChangeArrowTowerShooters):P(TOWN_CASTLE)/(MON_ZEALOT);

@@ -1,0 +1,28 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Give a full set of commander artifacts to the first hero of human players
+
+
+!?FU(OnDetermineMonInfoDlgUpgrade)&i^Typhon_Third_Upgrade_Mod_Active^;
+!#VA(monType:x) (upgType:x) (town:x) (hero:x);
+
+; Exit the trigger if not Galthran
+!!FU&(hero)<>(HERO_GALTHRAN):E;
+
+; Check for level of the hero
+!!HE(hero):E?(exp:y)/?(lv:y);
+
+; Upgrade Skeleton to Skeleton Archers or Skeleton Sharpshooters depending on levels
+!!if&(monType)=(MON_SKELETON);
+  !!if&(lv)<20;
+    !!VR(upgType):S295;
+  !!el;
+    !!VR(upgType):S299;
+  !!en;
+!!en;
+
+; Also upgrade Skeleton Archers to Skeleton Sharpshooters if level > 20
+!!VR(upgType)&(monType)=295/(lv)>=20:S299;

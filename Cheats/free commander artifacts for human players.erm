@@ -1,0 +1,36 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Give a full set of commander artifacts to the first hero of human players
+
+
+!?FU(OnAfterErmInstructions);
+!!re i/(PLAYER_FIRST)/(PLAYER_LAST);
+  ; Check for the heros of player i and store the first hero at v3
+  !!OW:Ii/?(isAi:y) Hi/2/3;
+
+  !!if&(isAi)<>(TRUE)/v3>(NO_HERO);
+    ; Create an array for storing artifacts that cannot be given to the commander
+    !!FU(NewIntArray):P?(artsNotGiven:y);
+    
+    ; Attempt to give the commander the first 6 commander arts
+    !!re (art:y)/(ART_AXE_OF_SMASHING)/(ART_BOOTS_OF_HASTE);
+      !!COi:A1/(art)/0;
+
+      ; Store the artifacts that are not given (no slot or owned) in the array
+      !!FU(Array_Push)&v1<>0:P(artsNotGiven)/(art);
+    !!en;
+
+    ; Add in the last 4 commander arts
+    !!FU(Array_Push):P(artsNotGiven)/(ART_BOW_OF_SEEKING)/(ART_DRAGON_EYE_RING)/(ART_HARDENED_SHIELD)/(ART_SLAVAS_RING_OF_POWER);
+    !!SN:M(artsNotGiven)/?(size:y);
+
+    ; Give the hero the rest of the commander arts
+    !!re (index:y)/0/(size)/1/-1;
+      !!SN:M(artsNotGiven)/(index)/?(art);
+      !!HEi:A4/(art);
+    !!en;
+  !!en;
+!!en;

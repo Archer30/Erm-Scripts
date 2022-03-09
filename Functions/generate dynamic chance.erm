@@ -33,8 +33,9 @@ ZVSE2
   !!VRi^rand_%z(itemName)_dynOdds^:+(additionalChance);
 !!en;
 
-; ============== TESTING ==============
-!?FU(OnKeyPressed)&i^key^=(KEY_0);
+; ========================== TESTING ==========================
+
+!?FU(OnKeyPressed)&i^key^=(KEY_0)/y1<>y1;
 !#VA(key:x) (preventDefault:x);
 
 !!VR(preventDefault):S(TRUE);
@@ -80,4 +81,3 @@ ZVSE2
   !!VRy2:*256;
   !!VRvx2:Sy1+y2+y3;
 !!en;
-; ============ END TESTING ============

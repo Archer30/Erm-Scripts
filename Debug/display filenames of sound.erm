@@ -13,10 +13,10 @@ ZVSE2
 
 !!if&i^soundname_on^;
   !!VRi^soundname_on^:S(FALSE);
-  !!IF:L^Display filename of sound {On}^;
+  !!IF:L^Display filename of sound {Off}^;
 !!el;
   !!VRi^soundname_on^:S(TRUE);
-  !!IF:L^Display filename of sound {Off}^;
+  !!IF:L^Display filename of sound {On}^;
 !!en;
 
 !?FU(OnSoundPlay)&i^soundname_on^;

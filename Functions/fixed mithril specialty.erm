@@ -41,8 +41,8 @@ ZVSE2
   !!en;
 !!en;
 
-; ============== TESTING ==============
+; ========================== TESTING ==========================
+
 !?FU(OnAfterErmInstructions);
 ; Please input any number (1 to 15) of heroes as arguments here
 !!FU(mith_SetUpMithrilSpecs):P(HERO_RISSA)/(HERO_NAGASH)/(HERO_SOLMYR);
-; ============ END TESTING ============

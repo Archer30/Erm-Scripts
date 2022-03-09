@@ -1,0 +1,18 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Function for giving free resources to owners of specific heroes
+
+
+!?FU(arch_GiveExtraRes);
+!#VA(hero:x) (minLv:x) (res:x) (qty:x);
+
+!!HE(hero):O?(owner:y) Ed/?(heroLv:y)/1;
+!!OW&(owner)>(NO_PLAYER)/(heroLv)>=(minLv):R(owner)/(res)/d(qty);
+
+; ========================== TESTING ==========================
+
+!?FU(OnEveryDay)&i^timerOnce^;
+!!FU(arch_GiveExtraRes):P(HERO_FIUR)/10/(RES_GEMS)/1;

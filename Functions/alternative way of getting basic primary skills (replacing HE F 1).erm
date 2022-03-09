@@ -6,38 +6,6 @@ ZVSE2
 ; A replacement for the buggy HE:F1 command. Mainly for compatility with Enhanced Commander Artifact Option (219).
 
 
-**** Testing Section ****
-; Check values of the two function for calculating basic primary skills by pressing 0
-*?FU(OnKeyPressed)&i^key^=(KEY_0);
-*#VA(key:x) (preventDefault:x);
-*!VR(preventDefault):S(TRUE);
-
-*!FU(arch_artBonusesTable):P;
-*!OW:C?(player:y);
-*!OW:A(player)/?(hero:y);
-*!FU(arch_GetBasicPrimarySkills):P(hero)/?(atk:y)/?(def:y)/?(pwr:y)/?(knl:y);
-*!FU(GetHeroPrimarySkillsWithoutArts):P(hero)/?(atkAlt:y)/?(defAlt:y)/?(pwrAlt:y)/?(knlAlt:y);
-
-*!IF:M^New HE:F1 values: %(atk) %(def) %(pwr) %(knl)
-
-Era Erm Framework values: %(atkAlt:y) %(defAlt:y) %(pwrAlt:y) %(knlAlt:y)^;
-
-; Experience the bug with the "good old" HE:F1 (Requires WoG Scripts) by pressing 9
-*?FU(OnKeyPressed)&i^key^=(KEY_9);
-*#VA(key:x) (preventDefault:x);
-*!VR(preventDefault):S(TRUE);
-
-*!UN:P219/(TRUE);
-*!OW:C?(player:y);
-*!OW:A(player)/?(hero:y);
-
-; give Dragon Eye Ring to current active hero, check primary skills with and without artifacts
-*!HE(hero):A4/(ART_DRAGON_EYE_RING) F?(atk:y)/?(def:y)/?(pwr:y)/?(knl:y)/1 F?(atkArt:y)/?(defArt:y)/?(pwrArt:y)/?(knlArt:y);
-*!IF:M^Basic PS (HE:F1): %(atk) %(def) %(pwr) %(knl)
-PS with arts: %(atkArt) %(defArt) %(pwrArt) %(knlArt)^;
-**** End Testing Section ****
-
-
 !?FU(arch_GetBasicPrimarySkills);
 !#VA(hero:x) (attack:x) (defence:x) (power:x) (knowledge:x);
 
@@ -145,3 +113,34 @@ PS with arts: %(atkArt) %(defArt) %(pwrArt) %(knlArt)^;
 !!SN:Mi^arch_artBonusesTable^/132/(packedValue132);
 !!SN:Vi^arch_artBonusesTable^/134/(packedValue134)/(packedValue135);
 !!SN:Vi^arch_artBonusesTable^/157/(packedValue157)/(packedValue158);
+
+; ========================== TESTING ==========================
+
+; Check values of the two function for calculating basic primary skills by pressing 0
+!?FU(OnKeyPressed)&i^key^=(KEY_0)/y1<>y1;
+!#VA(key:x) (preventDefault:x);
+!!VR(preventDefault):S(TRUE);
+
+!!FU(arch_artBonusesTable):P;
+!!OW:C?(player:y);
+!!OW:A(player)/?(hero:y);
+!!FU(arch_GetBasicPrimarySkills):P(hero)/?(atk:y)/?(def:y)/?(pwr:y)/?(knl:y);
+!!FU(GetHeroPrimarySkillsWithoutArts):P(hero)/?(atkAlt:y)/?(defAlt:y)/?(pwrAlt:y)/?(knlAlt:y);
+
+!!IF:M^New HE:F1 values: %(atk) %(def) %(pwr) %(knl)
+
+Era Erm Framework values: %(atkAlt:y) %(defAlt:y) %(pwrAlt:y) %(knlAlt:y)^;
+
+; Experience the bug with the "good old" HE:F1 (Requires WoG Scripts) by pressing 9
+!?FU(OnKeyPressed)&i^key^=(KEY_9)/y1<>y1;
+!#VA(key:x) (preventDefault:x);
+!!VR(preventDefault):S(TRUE);
+
+!!UN:P219/(TRUE);
+!!OW:C?(player:y);
+!!OW:A(player)/?(hero:y);
+
+; give Dragon Eye Ring to current active hero, check primary skills with and without artifacts
+!!HE(hero):A4/(ART_DRAGON_EYE_RING) F?(atk:y)/?(def:y)/?(pwr:y)/?(knl:y)/1 F?(atkArt:y)/?(defArt:y)/?(pwrArt:y)/?(knlArt:y);
+!!IF:M^Basic PS (HE:F1): %(atk) %(def) %(pwr) %(knl)
+PS with arts: %(atkArt) %(defArt) %(pwrArt) %(knlArt)^;
