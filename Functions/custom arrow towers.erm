@@ -14,5 +14,5 @@ ZVSE2
 
 ; ========================== TESTING ==========================
 
-!?FU(OnStartOrLoad)&y1<>y1;
+!?FU(OnStartOrLoad);
 !!FU(arrow_ChangeArrowTowerShooters):P(TOWN_CASTLE)/(MON_ZEALOT);

@@ -1,0 +1,49 @@
+ZVSE2
+; Author:   Archer30 & Hawaiing
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Customise the type and number raised by Necromancy
+
+
+!?FU(arch_CustomiseNecromany);
+!#VA(hero:x) (monType:x) (monNum:x) (newType:x) (newNum:x);
+
+!!VR(newType):S(monType);
+!!VR(newNum):S(monNum);
+
+; ========================== TESTING ==========================
+; Raise Ghosts if Vidomina with expert Necromancy + AotD
+!!if&(hero)=(HERO_VIDOMINA);
+  !!HE(hero):S(SKILL_NECROMANCY)/?(lv:y) A2/(ART_ARMOR_OF_THE_DAMNED)/?(num:y)/?(equipped:y);
+
+  !!if&(lv)=(SKILL_EXPERT)/(equipped)>0;
+    !!VR(newType):S(MON_GHOST);
+    !!VR(newNum)::2;
+  !!en;
+!!en;
+; ======================== END TESTING ========================
+
+!?FU(OnStartOrLoad);
+!!SN:L^erm_hooker.era^/?(hooker:y);
+!!FU&(hooker)=0:E;
+
+!!SN:A(hooker)/^SetHook^/?(address:y);
+!!SN:E(address)/1/4681831/(arch_ManageNecromany); [trigger after getting the type and number raised by Necromancy]
+
+!?FU(arch_ManageNecromany);
+; Get basic info
+!!UN:C6919200/4/?(value:y);
+!!VR(winAdd:y):S(value) +81224;         [address for the winning side]
+!!VR(typeAdd:y):S(value) +81232;        [address for the type of monster]
+!!VR(numAdd:y):S(value) +81228;         [address for the number of monster]
+; Get the winner's side, exit if no winner or no winning hero
+!!UN:C(winAdd)/4/?(side:y);
+!!FU&(side)=-1/i^battle_hero_%(side)^=(NO_HERO):E;
+
+; Get the original necromancy data and set the new
+!!UN:C(typeAdd)/(UNC_INT)/?(mon:y);
+!!UN:C(numAdd)/(UNC_INT)/?(num:y);
+!!FU(arch_CustomiseNecromany):Pi^battle_hero_%(side)^/(mon)/(num)/?(newMon:y)/?(newnum:y);
+!!UN:C(typeAdd)/(UNC_INT)/(newMon);
+!!UN:C(numAdd)/(UNC_INT)/(newnum);

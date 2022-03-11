@@ -1,0 +1,87 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Reduce the price for recruting creatures from external dwellings depending on diplomacy level and diplo arts
+; each level of diplomacy reduce the price by 5%. Each diplo arts also do the same. Diplomat's Cloak reduce by 15% percentage (only in TUM and Feng Mo).
+; Compatible with ACM extra levels
+
+
+!?OB(OBJ_CREATURE_GENERATOR_1);
+!!VRi^diplo_reducedPrice^:S(FALSE);
+!!HE(CURRENT_HERO):N?(hero:y);
+!!FU(diplo_CheckDiploLevel):P(hero)/?(lv:y);
+!!FU(diplo_LowerRecruitePrices)&i^diplo_reducedPrice^:P(hero)/(lv);
+
+!?OB(OBJ_CREATURE_GENERATOR_4);
+!!VRi^diplo_reducedPrice^:S(FALSE);
+!!HE(CURRENT_HERO):N?(hero:y);
+!!FU(diplo_CheckDiploLevel):P(hero)/?(lv:y);
+!!FU(diplo_LowerRecruitePrices)&i^diplo_reducedPrice^:P(hero)/(lv);
+
+!?FU(diplo_CheckDiploLevel);
+!#VA(hero:x) (lv:x);
+
+!!VR(lv):S0;
+
+!!HE(hero):S(SKILL_DIPLOMACY)/?(skillLv:y);
+
+!!if&(skillLv)=(SKILL_EXPERT);
+  !!if&i^H3_diplomacy_0_Hero%(hero)^/i^H3_diplomacy_1_Hero%(hero)^;
+    !!VR(skillLv):S5;
+  !!el&i^H3_diplomacy_0_Hero%(hero)^;
+    !!VR(skillLv):S4;
+  !!en;
+!!en;
+
+!!HE(hero):A2/(ART_STATESMANS_MEDAL)/d/?(medal:y);
+!!HE(hero):A2/(ART_DIPLOMATS_RING)/d/?(ring:y);
+!!HE(hero):A2/(ART_AMBASSADORS_SASH)/d/?(sash:y);
+
+!!VR(lv):S(skillLv);
+!!VR(lv)&(medal):+1;
+!!VR(lv)&(ring):+1;
+!!VR(lv)&(sash):+1;
+
+; Compatibility with mods
+!!if&i^Typhon_Third_Upgrade_Mod_Active^/i^tum_emerald_on^;
+  !!HE(hero):A2/180/d/?(cloak:y);
+  !!VR(lv)&(cloak):+6;
+!!el&i^fm_on^;
+  !!HE(hero):A2/168/d/?(cloak);
+  !!VR(lv)&(cloak):+6;
+!!en;
+
+!!VRi^diplo_reducedPrice^&(lv)>0:S(TRUE);
+
+!?FU(diplo_LowerRecruitePrices);
+!#VA(hero:x) (lv:x);
+
+!!VR(priceNewPct:y):S(lv) *5 *-1 +100;
+
+!!re (slot:y)/0/3;
+  !!DW998:M(slot)/?(mon:y)/?(qty:y);
+
+  !!if&(mon)>(NO_MON);
+    !!MA:C(mon)/(RES_GOLD)/?i^diplo_originalPrice_%(slot)^;
+    !!VR(test:y):Si^diplo_originalPrice_%(slot)^;
+    !!VR(priceNew:y):Si^diplo_originalPrice_%(slot)^ *(priceNewPct) :100;
+    !!MA:C(mon)/(RES_GOLD)/(priceNew);
+  !!en;
+!!en;
+
+!$OB(OBJ_CREATURE_GENERATOR_1)&i^diplo_reducedPrice^;
+!!FU(diplo_RestoreRecruitePrices):P;
+
+!$OB(OBJ_CREATURE_GENERATOR_1)&i^diplo_reducedPrice^;
+!!FU(diplo_RestoreRecruitePrices):P;
+
+!?FU(diplo_RestoreRecruitePrices);
+!!re (slot:y)/0/3;
+  !!DW998:M(slot)/?(mon:y)/?(qty:y);
+
+  !!if&(mon)>(NO_MON);
+    !!MA:C(mon)/(RES_GOLD)/i^diplo_originalPrice_%(slot)^;
+  !!en;
+!!en;
