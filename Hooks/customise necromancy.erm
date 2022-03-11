@@ -29,7 +29,7 @@ ZVSE2
 !!FU&(hooker)=0:E;
 
 !!SN:A(hooker)/^SetHook^/?(address:y);
-!!SN:E(address)/1/4681831/(arch_ManageNecromany); [trigger after getting the type and number raised by Necromancy]
+!!SN:E(address)/1/4681831/(arch_ManageNecromany); [trigger after getting the type and number raised by Necromancy with all the boosts from artifacts and buildings]
 
 !?FU(arch_ManageNecromany);
 ; Get basic info
@@ -42,8 +42,8 @@ ZVSE2
 !!FU&(side)=-1/i^battle_hero_%(side)^=(NO_HERO):E;
 
 ; Get the original necromancy data and set the new
-!!UN:C(typeAdd)/(UNC_INT)/?(mon:y);
+!!UN:C(typeAdd)/(UNC_INT)/?(type:y);
 !!UN:C(numAdd)/(UNC_INT)/?(num:y);
-!!FU(arch_CustomiseNecromany):Pi^battle_hero_%(side)^/(mon)/(num)/?(newMon:y)/?(newnum:y);
-!!UN:C(typeAdd)/(UNC_INT)/(newMon);
-!!UN:C(numAdd)/(UNC_INT)/(newnum);
+!!FU(arch_CustomiseNecromany):Pi^battle_hero_%(side)^/(type)/(num)/?(newType:y)/?(newNum:y);
+!!UN:C(typeAdd)/(UNC_INT)/(newType);
+!!UN:C(numAdd)/(UNC_INT)/(newNum);
