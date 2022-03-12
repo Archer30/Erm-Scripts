@@ -1,0 +1,140 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, 77 wog - map rules
+
+; Summon random enemy stacks every X round for battles between human and AI
+
+
+; ============== SETTINGS ==============
+!#VRi^sae_firstRound^:S0;               [First round of the summoning event]
+!#VRi^sae_everyXRound^:S3;              [Summoon every X round]
+!#VRi^sae_fightValuesEveryHeroLevel^:S10000; [Fight Values of monsters of the AI hero per level]
+!#VRi^sae_summonWithoutHero^:S(TRUE);   [Summon with the player's hero level if enemy hero is not available]
+; ============ END SETTINGS ============
+
+
+// Trigger every round from the first round (0) in a battle with both human and AI
+!?FU(OnBattleRound)&i^batle_round^>=0/i^battle_hasHuman^/i^batle_humanOnly^<>(TRUE);
+; Initialise timer for the first round or plus 1 except the first
+!!if&i^batle_round^=0;
+  !!VRi^sae_timer^:Si^sae_everyXRound^ -i^sae_firstRound^;
+!!el;
+  !!VRi^sae_timer^:+1;
+!!en;
+
+; Summon additional enemies every X round
+!!if&i^sae_timer^>=i^sae_everyXRound^;
+  !!VRi^sae_timer^:S0;
+  !!FU(sae_SummonAdditionalEnemies):P;
+!!en;
+
+// Function for summoning AI enemies
+!?FU(sae_SummonAdditionalEnemies);
+; Check for both sides
+!!re i/(BATTLE_LEFT)/(BATTLE_RIGHT);
+
+  !!if&i^battle_ai_%i^;
+
+    ; Calculate total fight values for summoning with hero level
+    !!if&i^battle_hero_%i^>(NO_HERO);
+      !!HEi^ballte_hero_%i^:E?(exp:y)/?(lv:y)/1;
+    !!el&i^sae_summonWithoutHero^;
+      !!VR(otherSide:y):Xi;
+      !!HEi^battle_hero_%(otherSide)^:E?(exp)/?(lv)/1;
+    !!en;
+
+    !!VR(totalFv:y):Si^sae_fightValuesEveryHeroLevel^ *(lv);
+
+    ; Get random monster type and quantity, position for summoning
+    !!FU(sae_GetRandomMonWithFightValues):P(totalFv)/?(type:y)/?(num:y)/?(isDoubleWide:y);
+    !!FU(sae_GetRandomPositionForSummon):Pi/(isDoubleWide)/?(pos:y);
+    ; Summon the stack and play sound
+    !!SN:P^SUMNELM^;
+    !!BU:S(type)/(num)/(pos)/i/-1/1;
+  !!en;
+!!en;
+
+!?FU(sae_GetRandomMonWithFightValues);
+!#VA(totalFv:x) (type:x) (num:x) (isDoubleWide:x);
+
+; Get the latest monster ID
+!!FU(GetMaxMonsterId):P?(lastMon:y);
+
+; Loop through all the monsters
+!!re i;
+  !!VR(type):R0/(MON_FIRST)/(lastMon);
+  ; Check if the found monster is valid
+  !!FU(sae_CheckIfMonValid):P(type)/?(isValid:y);
+
+  ; Check its fight value and see if it is bigger than the total fight values by its own
+  !!if&(isValid);
+    !!MA:F(type)/?(fv:y);
+
+    ; Break the loop if target is found
+    !!br&(fv)<=(totalFv);
+  !!en;
+!!en;
+
+; Calculate the quantity of the random monster
+!!MA:F(MON_PEASANT)/?(fvPeasant:y);     [Ensure the fight value is at least the value of persant to prevent issues]
+!!VR(fv):F(fvPeasant)/(INT_MAX);
+!!VR(num):S(totalFv) :(fv);
+!!MA:X(type)/?(flags:y);
+!!VR(isDoubleWide):S(flags) &(MON_FLAG_WIDE);
+
+!?FU(sae_CheckIfMonValid);
+!#VA(mon:x) (isValid:x);
+
+!!VR(isValid):S(TRUE);
+!!VR(isValid)|(mon)=(MON_NOT_USED_1)/(mon)=(MON_NOT_USED_2)/(mon)=(MON_NOT_USED_3)/(mon)=(MON_NOT_USED_4):S(FALSE);
+!!VR(isValid)&(mon)>=(MON_CATAPULT)/(mon)<=(MON_ARROW_TOWERS):S(FALSE);
+!!VR(isValid)&(mon)>=(MON_EMISSARY_OF_WAR)/(mon)<=(MON_EMISSARY_OF_LORE):S(FALSE);
+!!VR(isValid)&(mon)>=(MON_COMMANDER_FIRST_A)/(mon)<=(MON_COMMANDER_LAST_D):S(FALSE);
+
+!?FU(sae_GetRandomPositionForSummon);
+!#VA(side:x) (isDoubleWide:x) (pos:x);
+
+; Set up array for invalid positions
+!!FU(NewIntArray):P22/?(invalidPosArray:y);
+!!SN:V(invalidPosArray)/0/0/17/34/51/68/85/102/119/136/153/170/16/33/50/67/84/101/118/136/152/169/186;
+
+!!if&(isDoubleWide);
+  !!if&(side)=(BATTLE_LEFT);
+    !!FU(Array_Push):P(invalidPosArray)/15/32/49/66/83/100/117/134/151/166/185;
+  !!el;
+    !!FU(Array_Push):P(invalidPosArray)/1/18/35/52/69/86/103/120/137/154/171;
+  !!en;
+!!en;
+
+!!SN:M(invalidPosArray)/?(size:y);
+
+; Get a random position and check if it is invalid or occupied
+!!re i;
+  !!VR(pos):R0/1/185;
+
+  !!re (index:y)/0/(size)/1/-1;
+    !!SN:M(invalidPosArray)/(index)/?(invalidPos:y);
+
+    !!br&(invalidPos)=(pos);
+  !!en;
+
+  !!if&(pos)=(size);
+    ; Check if there is a living stack on the targeted postion, break the loop if valid
+    !!BU:E(pos)/?(stack:y);
+
+    !!if&(isDoubleWide);
+      !!if&(side)=(BATTLE_LEFT);
+        !!VR(anotherPos:y):S(pos) +1;
+      !!el;
+        !!VR(anotherPos):S(pos) -1;
+      !!en;
+
+      !!BU:E(anotherPos)/?(anotherStack:y);
+
+      !!co&(anotherStack)>(NO_STACK);
+    !!en;
+
+    !!br&(stack)=(NO_STACK);
+  !!en;
+!!en;
