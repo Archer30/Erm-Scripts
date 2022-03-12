@@ -39,7 +39,7 @@ ZVSE2
 !!VR(numAdd:y):S(value) +81228;         [address for the number of monster]
 ; Get the winner's side, exit if no winner or no winning hero
 !!UN:C(winAdd)/4/?(side:y);
-!!FU&(side)=-1/i^battle_hero_%(side)^=(NO_HERO):E;
+!!FU|(side)=-1/i^battle_hero_%(side)^=(NO_HERO):E;
 
 ; Get the original necromancy data and set the new
 !!UN:C(typeAdd)/(UNC_INT)/?(type:y);
