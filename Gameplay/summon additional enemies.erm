@@ -8,23 +8,24 @@ ZVSE2
 
 ; ============== SETTINGS ==============
 !#VRi^sae_firstRound^:S0;               [First round of the summoning event]
-!#VRi^sae_everyXRound^:S3;              [Summoon every X round]
+!#VRi^sae_everyXRound^:S1;              [Summoon every X round]
 !#VRi^sae_fightValuesEveryHeroLevel^:S10000; [Fight Values of monsters of the AI hero per level]
 !#VRi^sae_summonWithoutHero^:S(TRUE);   [Summon with the player's hero level if enemy hero is not available]
 ; ============ END SETTINGS ============
 
 
 // Trigger every round from the first round (0) in a battle with both human and AI
-!?FU(OnBattleRound)&i^batle_round^>=0/i^battle_hasHuman^/i^batle_humanOnly^<>(TRUE);
+!?FU(OnBattleRound)&i^battle_round^>=0/i^battle_hasHuman^/i^battle_humanOnly^<>(TRUE);
+
 ; Initialise timer for the first round or plus 1 except the first
-!!if&i^batle_round^=0;
+!!if&i^battle_round^=0;
   !!VRi^sae_timer^:Si^sae_everyXRound^ -i^sae_firstRound^;
 !!el;
   !!VRi^sae_timer^:+1;
 !!en;
 
 ; Summon additional enemies every X round
-!!if&i^sae_timer^>=i^sae_everyXRound^;
+!!if&i^sae_timer^=i^sae_everyXRound^;
   !!VRi^sae_timer^:S0;
   !!FU(sae_SummonAdditionalEnemies):P;
 !!en;
@@ -35,34 +36,67 @@ ZVSE2
 !!re i/(BATTLE_LEFT)/(BATTLE_RIGHT);
 
   !!if&i^battle_ai_%i^;
+    !!VR(heroSide:y):Si;
 
     ; Calculate total fight values for summoning with hero level
-    !!if&i^battle_hero_%i^>(NO_HERO);
-      !!HEi^ballte_hero_%i^:E?(exp:y)/?(lv:y)/1;
-    !!el&i^sae_summonWithoutHero^;
-      !!VR(otherSide:y):Xi;
-      !!HEi^battle_hero_%(otherSide)^:E?(exp)/?(lv)/1;
+    !!if&i^battle_hero_%i^=(NO_HERO);
+      ; Get the player's hero 
+      !!if&i^sae_summonWithoutHero^;
+        !!VR(heroSide):Xi;
+      !!el;
+        !!FU:E;
+      !!en;
     !!en;
+
+    !!HEi^battle_hero_%(heroSide)^:E?(exp:y)/?(lv:y)/1;
 
     !!VR(totalFv:y):Si^sae_fightValuesEveryHeroLevel^ *(lv);
 
     ; Get random monster type and quantity, position for summoning
-    !!FU(sae_GetRandomMonWithFightValues):P(totalFv)/?(type:y)/?(num:y)/?(isDoubleWide:y);
-    !!FU(sae_GetRandomPositionForSummon):Pi/(isDoubleWide)/?(pos:y);
-    ; Summon the stack and play sound
-    !!SN:P^SUMNELM^;
-    !!BU:S(type)/(num)/(pos)/i/-1/1;
+    ; Check if it is eligible to summon (total stack number<20)
+    !!FU(sae_CheckIfEligibleToSummon):Pi/?(isEligible:y);
+
+    !!if&(isEligible);
+      !!FU(sae_GetRandomMonWithFightValues):P(totalFv)/?(type:y)/?(num:y)/?(isDoubleWide:y);
+
+      !!if&(num)>0;
+        !!FU(sae_GetRandomPositionForSummon)&(num)>0:Pi/(isDoubleWide)/?(pos:y);
+
+        !!if&(pos)>-1;
+          ; Summon the stack and play sound
+          !!SN:P^SUMNELM^;
+          !!BU:S(type)/(num)/(pos)/i/-1/(TRUE);
+          ; Add in the flag of summoning creature so the stack ID would be released after killed
+          !!BU:E(pos)/?(stack:y);
+          !!BM(stack):Fd|(MON_FLAG_SUMMONED);
+        !!en;
+      !!en;
+    !!en;
   !!en;
 !!en;
 
+!?FU(sae_CheckIfEligibleToSummon);
+!#VA(side:x) (isEligible:x);
+
+!!VR(isEligible):S(FALSE);
+
+!!UN:C6919200/4/?(value:y);
+!!VR(address:y):S(side) *4 +21692 +(value);
+!!UN:C(address)/4/?(stackNum:y);
+
+!!VR(isEligible)&(stackNum)<20:S(TRUE);
+
 !?FU(sae_GetRandomMonWithFightValues);
 !#VA(totalFv:x) (type:x) (num:x) (isDoubleWide:x);
+
+; Initialise the number of monsters Return 0 if no monster is found with 100 times of loop
+!!VR(num):S0;
 
 ; Get the latest monster ID
 !!FU(GetMaxMonsterId):P?(lastMon:y);
 
 ; Loop through all the monsters
-!!re i;
+!!re i/0/99;
   !!VR(type):R0/(MON_FIRST)/(lastMon);
   ; Check if the found monster is valid
   !!FU(sae_CheckIfMonValid):P(type)/?(isValid:y);
@@ -95,6 +129,8 @@ ZVSE2
 !?FU(sae_GetRandomPositionForSummon);
 !#VA(side:x) (isDoubleWide:x) (pos:x);
 
+; Initialise position, would be used if no position found
+!!VR(pos):S-1;
 ; Set up array for invalid positions
 !!FU(NewIntArray):P22/?(invalidPosArray:y);
 !!SN:V(invalidPosArray)/0/0/17/34/51/68/85/102/119/136/153/170/16/33/50/67/84/101/118/136/152/169/186;
@@ -109,8 +145,8 @@ ZVSE2
 
 !!SN:M(invalidPosArray)/?(size:y);
 
-; Get a random position and check if it is invalid or occupied
-!!re i;
+; Get a random position and check if it is invalid or occupied, loop for 100 times
+!!re i/0/99;
   !!VR(pos):R0/1/185;
 
   !!re (index:y)/0/(size)/1/-1;
@@ -119,22 +155,23 @@ ZVSE2
     !!br&(invalidPos)=(pos);
   !!en;
 
-  !!if&(pos)=(size);
-    ; Check if there is a living stack on the targeted postion, break the loop if valid
-    !!BU:E(pos)/?(stack:y);
+  !!if&(index)=(size);
+    ; Check if there is a living stack or obstacles on the targeted postion, break the loop if valid
+    !!VR(isAvailPos:y):S(TRUE);
+    !!BU:E(pos)/?(stack:y) O(pos)/?(flag:y);
+    !!VR(isAvailPos)|(stack)>(NO_STACK)/(flag)>0:S(FALSE);
 
-    !!if&(isDoubleWide);
+    !!if&(isDoubleWide)/(isAvailPos);
       !!if&(side)=(BATTLE_LEFT);
-        !!VR(anotherPos:y):S(pos) +1;
+        !!VR(secPos:y):S(pos) +1;
       !!el;
-        !!VR(anotherPos):S(pos) -1;
+        !!VR(secPos):S(pos) -1;
       !!en;
 
-      !!BU:E(anotherPos)/?(anotherStack:y);
+      !!BU:E(secPos)/?(secStack:y) O(secPos)/?(secFlag:y);
+      !!VR(isAvailPos)|(secStack)>(NO_STACK)/(secFlag)>0:S(FALSE);
+    !!el;
 
-      !!co&(anotherStack)>(NO_STACK);
-    !!en;
-
-    !!br&(stack)=(NO_STACK);
+    !!br&(isAvailPos);
   !!en;
 !!en;
