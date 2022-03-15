@@ -1,0 +1,118 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, 77 wog - map rules
+
+; Summon random enemy stacks every X round for battles between human and AI
+
+
+!?FU(OnBattleRound)&i^battle_round^>=0/i^battle_hasHuman^/i^battle_humanOnly^<>(TRUE);
+; ========================== TESTING ==========================
+!!FU(tus_SummonAdditionalEnemies):P-1/-1/(MON_MARKSMAN)/30;
+!!FU(tus_SummonAdditionalEnemies):P5/(HERO_ORRIN)/(MON_MARKSMAN)/30;
+!!FU(tus_SummonAdditionalEnemies):P9/(HERO_ORRIN)/(MON_MARKSMAN)/60;
+!!FU(tus_SummonAdditionalEnemies):P12/(HERO_ORRIN)/(MON_MARKSMAN)/90;
+; ======================== END TESTING ========================
+
+!?FU(tus_SummonAdditionalEnemies);
+!#VA(round:x);                          [round of summoning. -1 for every round]
+!#VA(hero:x);                           [hero who can summon. -1 for any hero/no hero]
+!#VA(type:x);                           [Type of summoning monster]
+!#VA(num:x);                            [number of monster]
+
+; Exit if not targeted hero
+!!FU&i^battle_round^<>(round)/(round)<>-1:E;
+!!FU&i^battle_hero_0^<>(hero)/i^battle_hero_1^<>(hero)/(hero)<>-1:E;
+
+; Exit if the target hero is not controled by AI
+!!VR(side:y):S-1;
+
+!!if&i^battle_ai_0^;
+  !!VR(side)|i^battle_hero_0^=(hero)/(hero)=-1:S(BATTLE_LEFT);
+!!el&i^battle_ai_1^;
+  !!VR(side)|i^battle_hero_1^=(hero)/(hero)=-1:S(BATTLE_RIGHT);
+!!en;
+
+!!FU&(side)=-1:E;
+
+; Check if it is eligible to summon (if the stack count is fewer than 20)
+!!FU(tus_CheckIfEligibleToSummon):P(side)/?(isEligible:y);
+
+!!if&(isEligible);
+  !!MA:X(type)/?(flags:y);
+  !!VR(isDoubleWide:y):S(flags) &(MON_FLAG_WIDE);
+
+  !!FU(tus_GetRandomPositionForSummon):P(side)/(isDoubleWide)/?(pos:y);
+
+  !!if&(pos)>-1;
+    ; Summon the stack and play sound
+    !!SN:P^SUMNELM^;
+    !!BU:S(type)/(num)/(pos)/(side)/-1/(TRUE);
+    ; Add in the flag of summoning creature so the stack ID would be released after killed
+    !!BU:E(pos)/?(stack:y);
+    !!BM(stack):Fd|(MON_FLAG_SUMMONED);
+  !!en;
+!!en;
+
+!?FU(tus_CheckIfEligibleToSummon);
+!#VA(side:x) (isEligible:x);
+
+!!VR(isEligible):S(FALSE);
+
+!!UN:C6919200/4/?(value:y);
+!!VR(address:y):S(side) *4 +21692 +(value);
+!!UN:C(address)/4/?(stackNum:y);
+
+!!VR(isEligible)&(stackNum)<20:S(TRUE);
+
+!?FU(tus_GetRandomPositionForSummon);
+!#VA(side:x) (isDoubleWide:x) (pos:x);
+
+; Initialise position, would be used if no position found
+!!VR(pos):S-1;
+!!VR(searchLimit:y):S20;
+
+; Set up array for ideal summoning positions
+!!FU(NewIntArray):P11/?(summonPositions:y);
+
+!!if&(side)=(BATTLE_LEFT);
+  !!SN:V(summonPositions)/0/2/19/36/53/70//87/104/121/138/155/172;
+!!el;
+  !!SN:V(summonPositions)/0/14/31/48/65/82/99/116/133/150/167/184;
+!!en;
+
+; Shuffle the array
+!!FU(Array_Shuffle):P(summonPositions);
+
+!!re i;
+  !!SN:M(summonPositions)/?(size:y);
+
+  ; Break the loop if no itme from the array
+  !!if&(size)=0;
+    !!br;
+  !!el;
+    ; Remove and examine the last element of the array
+    !!FU(Array_Pop):P(summonPositions)/?(randomPos:y);
+
+    ; Check if the last item is available
+    !!VR(isAvailPos:y):S(TRUE);
+    !!BU:E(randomPos)/?(stack:y) O(randomPos)/?(flag:y);
+    !!VR(isAvailPos)|(stack)>(NO_STACK)/(flag)>0:S(FALSE);
+
+    !!if&(isDoubleWide)/(isAvailPos);
+      !!if&(side)=(BATTLE_LEFT);
+        !!VR(secPos:y):S(randomPos) +1;
+      !!el;
+        !!VR(secPos):S(randomPos) -1;
+      !!en;
+
+      !!BU:E(secPos)/?(secStack:y) O(secPos)/?(secFlag:y);
+      !!VR(isAvailPos)|(secStack)>(NO_STACK)/(secFlag)>0:S(FALSE);
+    !!en;
+
+    ; Break the loop if an ideal position is found
+    !!br&(isAvailPos);
+  !!en;
+!!en;
+
+!!VR(pos)&(isAvailPos):S(randomPos);
