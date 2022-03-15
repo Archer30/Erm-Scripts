@@ -1,0 +1,72 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Now all the monsteres lead by Adealdie casts Frost Ring when they are hit
+; To-do: This script has to be optimised. For now it does not consider whether there are friendly troops nearby, the front hex of double wide monsters and spell immunity.
+; It is better to be rewritten with BM:K/spell immunity check function from Fengshen
+
+
+; ============== SETTINGS ==============
+!#VRi^adel_heroPwrPct^:S20;             [The percentage of the frost ring damage comparing with casting by the hero]
+; ============ END SETTINGS ============
+
+
+!?FU(OnBeforeBattleAction);
+!!BG:E?i^arch_destinationStack^;
+
+!!if&i^arch_destinationStack^>(NO_STACK);
+  !!VRi^arch_destinationSide^:Si^arch_destinationStack^ :21;
+  !!VRi^arch_destinationHero^:Si^battle_hero_%i(arch_destinationSide)^;
+!!en;
+
+!?FU(OnBattleActionEnd)&i^arch_destinationStack^>(NO_STACK)/i^arch_destinationHero^=(HERO_ADELAIDE);
+!!FU(adel_CheckIfHostileMonAdjacent):Pi^arch_destinationStack^/i^arch_destinationSide^/?(hostileMonAdjacent:y);
+
+!!if&(hostileMonAdjacent);
+  !!HEi^arch_destinationHero^:Ed/?(lv:y)/1 Fd/d/?(pwr:y)/d;
+  !!VR(scaledPwr:y):S(pwr) :100 *i^adel_heroPwrPct^;
+  !!BMi^arch_destinationStack^:P?(pos:y);
+  !!BM:C(SPELL_FROST_RING)/(pos)/(SKILL_ADVANCED)/(scaledPwr)/-1;
+!!en;
+
+!?FU(adel_CheckIfHostileMonAdjacent);
+!#VA(stack:x) (side:x) (result:x);
+
+!!BM(stack):P?(pos:y);
+!!VR(result):S(FALSE);
+!!VR(isOddRow:y):S(pos) :17 %2;
+
+!!FU(NewIntArray):P6/?(candidatePos:y);
+!!VR(pos1:y):S(pos) -1;
+!!VR(pos2:y):S(pos) +1;
+
+!!if&(isOddRow);
+  !!VR(pos3:y):S(pos) -18;
+  !!VR(pos4:y):S(pos) -17;
+  !!VR(pos5:y):S(pos) +16;
+  !!VR(pos6:y):S(pos) +17;
+!!el;
+  !!VR(pos3:y):S(pos) -17;
+  !!VR(pos4:y):S(pos) -16;
+  !!VR(pos5:y):S(pos) +17;
+  !!VR(pos6:y):S(pos) +18;
+!!en;
+
+!!SN:V(candidatePos)/0/(pos1)/(pos2)/(pos3)/(pos4)/(pos5)/(pos6);
+
+!!re i/0/5;
+  !!SN:M(candidatePos)/i/?(adjacentPos:y);
+  !!BU:E(adjacentPos)/?(adjacentStack:y);
+
+  !!if&(adjacentStack)>(NO_STACK);
+    !!VR(stackSide:y):S(adjacentStack) :21;
+
+    !!if&(stackSide)<>(side);
+      !!VR(result):S(TRUE);
+
+      !!br;
+    !!en;
+  !!en;
+!!en;
