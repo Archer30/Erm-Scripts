@@ -1,0 +1,30 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Show the info of position on the battlefield
+
+
+!?FU(OnKeyPressed)&i^key_alt^/i^key^=(KEY_N);
+!#VA(key:x) (preventDefault:x);
+
+!!VR(preventDefault):S(TRUE);
+
+!!if&i^battinfo_on^;
+  !!VRi^battinfo_on^:S(FALSE);
+  !!IF:L^Display info of position {Off}^;
+!!el;
+  !!VRi^battinfo_on^:S(TRUE);
+  !!IF:L^Display info of position {On}^;
+!!en;
+
+!?FU(OnBattleMouseHint)&i^battinfo_on^;
+!!MM:D?(pos:y);
+
+!!if&(pos)>=0/(pos)<=186;
+  !!MM:M?(origText:z);
+  !!BU:D(pos)/?(buD:y) E(pos)/?(buE:y);
+  !!VR(newText:z):S(origText) +^  BU:D=%(buD)^ +^, BU:E=%(buE)^;
+  !!MM:M(newText);
+!!en;

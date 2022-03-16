@@ -1,5 +1,6 @@
 ZVSE2
 ; Author:   Archer30
+; Special thanks to wessonsm
 ; Engine:   ERM 2.0+
 ; Requires: ERA 3.3+, Era Erm Framework, 77 wog - map rules
 
@@ -42,14 +43,14 @@ ZVSE2
   !!MA:X(type)/?(flags:y);
   !!VR(isDoubleWide:y):S(flags) &(MON_FLAG_WIDE);
 
-  !!FU(tus_GetRandomPositionForSummon):P(side)/(isDoubleWide)/?(pos:y);
+  !!FU(tus_GetRandomPositionForSummon):P(side)/(isDoubleWide)/?(randPos:y);
 
-  !!if&(pos)>-1;
+  !!if&(randPos)>-1;
     ; Summon the stack and play sound
     !!SN:P^SUMNELM^;
-    !!BU:S(type)/(num)/(pos)/(side)/-1/(TRUE);
+    !!BU:S(type)/(num)/(randPos)/(side)/-1/(TRUE);
     ; Add in the flag of summoning creature so the stack ID would be released after killed
-    !!BU:E(pos)/?(stack:y);
+    !!BU:E(randPos)/?(stack:y);
     !!BM(stack):Fd|(MON_FLAG_SUMMONED);
   !!en;
 !!en;
@@ -65,54 +66,42 @@ ZVSE2
 
 !!VR(isEligible)&(stackNum)<20:S(TRUE);
 
-!?FU(tus_GetRandomPositionForSummon);
-!#VA(side:x) (isDoubleWide:x) (pos:x);
+!?FU(tus_GetRandomPositionForSummon);   [by wessonsm]
+!#VA(side:x) (isDoubleWide:x) (randPos:x);
 
-; Initialise position, would be used if no position found
-!!VR(pos):S-1;
-!!VR(searchLimit:y):S20;
+!!VR(randPos):S-1;
+!!FU(NewIntArray):P?(validPosArray:y);
 
-; Set up array for ideal summoning positions
-!!FU(NewIntArray):P11/?(summonPositions:y);
-
-!!if&(side)=(BATTLE_LEFT);
-  !!SN:V(summonPositions)/0/2/19/36/53/70//87/104/121/138/155/172;
-!!el;
-  !!SN:V(summonPositions)/0/14/31/48/65/82/99/116/133/150/167/184;
-!!en;
-
-; Shuffle the array
-!!FU(Array_Shuffle):P(summonPositions);
-
-!!re i;
-  !!SN:M(summonPositions)/?(size:y);
-
-  ; Break the loop if no itme from the array
-  !!if&(size)=0;
-    !!br;
-  !!el;
-    ; Remove and examine the last element of the array
-    !!FU(Array_Pop):P(summonPositions)/?(randomPos:y);
-
-    ; Check if the last item is available
-    !!VR(isAvailPos:y):S(TRUE);
-    !!BU:E(randomPos)/?(stack:y) O(randomPos)/?(flag:y);
-    !!VR(isAvailPos)|(stack)>(NO_STACK)/(flag)>0:S(FALSE);
-
-    !!if&(isDoubleWide)/(isAvailPos);
-      !!if&(side)=(BATTLE_LEFT);
-        !!VR(secPos:y):S(randomPos) +1;
-      !!el;
-        !!VR(secPos):S(randomPos) -1;
-      !!en;
-
-      !!BU:E(secPos)/?(secStack:y) O(secPos)/?(secFlag:y);
-      !!VR(isAvailPos)|(secStack)>(NO_STACK)/(secFlag)>0:S(FALSE);
-    !!en;
-
-    ; Break the loop if an ideal position is found
-    !!br&(isAvailPos);
+!!re (pos:y)/1/185;
+  !!VR(isAvailPos:y):S(TRUE);
+  !!FU(sae_IfHexIsFree):P(pos)/?(isAvailPos);
+  
+  !!if&(isDoubleWide)/(isAvailPos);
+    !!VR(secPos:y)&(side)=(BATTLE_LEFT):S(pos) +1;
+    !!VR(secPos)&(side)=(BATTLE_RIGHT):S(pos) -1;
+    !!FU(sae_CheckIfHexIsFree):P(secPos)/?(isAvailPos);
   !!en;
+  
+  !!FU(Array_Push)&(isAvailPos):P(validPosArray)/(pos);
 !!en;
 
-!!VR(pos)&(isAvailPos):S(randomPos);
+!!SN:M(validPosArray)/?(arraySize:y);
+
+!!if&(arraySize)>=1;
+  !!VR(lastIndex:y):S(arraySize)-1;
+  !!VR(randPosPtr:y):R0/0/(lastIndex);
+  !!SN:M(validPosArray)/(randPosPtr)/?(randPos);
+!!en;
+
+!?FU(sae_CheckIfHexIsFree);
+!#VA(pos:x) (isAvailPos:x);
+
+!!VR(isAvailPos):S(TRUE);
+!!VR(posColumn:y):S(pos) %17;
+
+!!if|(posColumn)=0/(posColumn)=16;
+  !!VR(isAvailPos):S(FALSE);
+!!el;
+  !!BU:E(pos)/?(stack:y) O(pos)/?(obstacleFlag:y);
+  !!VR(isAvailPos)|(stack)>(NO_STACK)/(obstacleFlag)>0:S(FALSE);
+!!en;
