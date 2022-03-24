@@ -9,123 +9,54 @@ ZVSE2
 
 
 ; ============== SETTINGS ==============
-*#VRi^0_atkspell_triggerMon^:S(MON_ARCHER);         [Creature that has this ability]
-*#VRi^0_atkspell_actionMode^:S2;                    [Action for triggering the spell. 0 - Melee, 1 - Ranged, 2 - Melee & Ranged]
-*#VRi^0_atkspell_chance^:S100;                      [Chance of casting a initial spell]
+!#VRi^0_atkspell_triggerMon^:S(MON_ARCHER);         [Creature that has this ability]
+!#VRi^0_atkspell_actionMode^:S2;                    [Action for triggering the spell. 0 - Melee, 1 - Ranged, 2 - Melee & Ranged]
+!#VRi^0_atkspell_chance^:S100;                      [Chance of casting a initial spell]
 
-*#VRi^0_atkspell_initSpell^:S(SPELL_WEAKNESS);      [Initial spell the creature would cast upon attacking]
-*#VRi^0_atkspell_initSpellLevel^:S(SKILL_ADVANCED); [Skill level of the initial spell]
-*#VRi^0_atkspell_initSpellPower^:S3;                [Power of the initial spell]
+!#VRi^0_atkspell_initSpell^:S(SPELL_WEAKNESS);      [Initial spell the creature would cast upon attacking]
+!#VRi^0_atkspell_initSpellLevel^:S(SKILL_ADVANCED); [Skill level of the initial spell]
+!#VRi^0_atkspell_initSpellPower^:S3;                [Power of the initial spell]
 
-*#VRi^0_atkspell_altSpell_on^:S(TRUE);              [Switch for casting the alternative spell when the attacked target has the buff of the initial spell]
-*#VRi^0_atkspell_altSpell_repeatable^:S(TRUE);      [Switch for whether the alternative spell is allowed to cast even if the target is buffed (usually enabled for Disrupting Ray)]
-*#VRi^0_atkspell_altSpell^:S(SPELL_DISRUPTING_RAY); [Alternative spell is only casted when the debuff of the initial spell is applied on the attacked target]
-*#VRi^0_atkspell_altSpellLevel^:S(SKILL_ADVANCED);  [Skill level of the alternative spell]
-*#VRi^0_atkspell_altSpellPower^:S3;                 [Power of the alternative spell]   
+!#VRi^0_atkspell_altSpell_on^:S(TRUE);              [Switch for casting the alternative spell when the attacked target has the buff of the initial spell]
+!#VRi^0_atkspell_altSpell_repeatable^:S(TRUE);      [Switch for whether the alternative spell is allowed to cast even if the target is buffed (usually enabled for Disrupting Ray)]
+!#VRi^0_atkspell_altSpell^:S(SPELL_DISRUPTING_RAY); [Alternative spell is only casted when the debuff of the initial spell is applied on the attacked target]
+!#VRi^0_atkspell_altSpellLevel^:S(SKILL_ADVANCED);  [Skill level of the alternative spell]
+!#VRi^0_atkspell_altSpellPower^:S3;                 [Power of the alternative spell]   
 ; ============ END SETTINGS ============
 
 
-*?FU(atkspell_OnAfterShoot)&i^0_atkspell_actionMode^<>0;
-*!FU(atkspell_CastAfterAttack):P;
+!?FU(atkspell_OnAfterShoot)&i^0_atkspell_actionMode^<>0;
+!#VA(atkStack:x) (defStack:x);
 
-*?FU(atkspell_OnAfterMelee)&i^0_atkspell_actionMode^<>1;
-*!FU(atkspell_CastAfterAttack):P;
+!!FU(atkspell_CastAfterAttack):P(atkStack)/(defStack);
 
-*?FU(atkspell_CastAfterAttack);
+!?FU(atkspell_OnAfterMelee)&i^0_atkspell_actionMode^<>1;
+!#VA(atkStack:x) (defStack:x);
+
+!!FU(atkspell_CastAfterAttack):P(atkStack)/(defStack);
+
+!?FU(atkspell_CastAfterAttack);
+!#VA(atkStack:x) (defStack:x);
+
 ; Exit if not ideal creature or the attacked target is dead
-*!BG:N?(stackAtk:y) E?(stackDef:y);
-*!BM(stackAtk):T?(mon:y);
-*!FU|(mon)<>i^0_atkspell_triggerMon^/(stackDef)<=(NO_STACK):E;
+!!BG:N?(atkStack:y) E?(defStack:y);
+!!BM(atkStack):T?(mon:y);
+!!FU|(mon)<>i^0_atkspell_triggerMon^/(defStack)<=(NO_STACK):E;
 
 ; Exit if no luck
-*!VR(random:y):T0/1/100;
-*!FU&i^0_atkspell_chance^<(random):E;
+!!VR(random:y):T0/1/100;
+!!FU&i^0_atkspell_chance^<(random):E;
 
-*!BG:Q?(sideAtk:y);
+!!BG:Q?(atkSide:y);
 ; Check if the attacked target is buffed with the initial spell
-*!BM(stackDef):P?(pos:y) Gi^0_atkspell_initSpell^/?(duration:y)/?(level:y);
+!!BM(defStack):P?(pos:y) Gi^0_atkspell_initSpell^/?(duration:y)/?(level:y);
 
 ; Cast the initial spell if the target has no initial buff
-*!if&(duration)=0/i^0_atkspell_initSpell^>(NO_SPELL);
-  *!FU(atkspell_CheckStackImmunity):P(stackDef)/i^0_atkspell_initSpell^/(sideAtk)/?(result:y);
-  *!BMi^atkspell_stackAttacking^&(result):Ci^0_atkspell_initSpell^/(pos)/i^0_atkspell_initSpellLevel^/i^0_atkspell_initSpellPower^/1;
+!!if&(duration)=0/i^0_atkspell_initSpell^>(NO_SPELL);
+  !!FU(atkspell_CheckStackImmunity):P(defStack)/i^0_atkspell_initSpell^/(atkSide)/?(result:y);
+  !!BMi^atkspell_stackAttacking^&(result):Ci^0_atkspell_initSpell^/(pos)/i^0_atkspell_initSpellLevel^/i^0_atkspell_initSpellPower^/1;
 ; Cast the alternative spell if the target is buffed
-*!el&i^0_atkspell_altSpell_on^/i^0_atkspell_altSpell^>(NO_SPELL);
-  *!FU(atkspell_CheckStackImmunity):P(stackDef)/i^0_atkspell_altSpell^/(sideAtk)/?(result);
-  *!BMi^atkspell_stackAttacking^&(result):Ci^0_atkspell_altSpell^/(pos)/i^0_atkspell_altSpellLevel^/i^0_atkspell_altSpellPower^/1;
-*!en;
-
-
-*?FU(OnGameEnter); 
-*!SN:L^EraPlugins\erm_hooker.era^/?(ermHooker:y); 
-*!FU&(ermHooker)=(FALSE):E;
-
-*!SN:A(ermHooker)/^SetHook^/?(hooker:y); 
-*!SN:E(hooker)/1/4462998/(WOG_HOOK_AfterMeleeAttack); 
-*!SN:E(hooker)/1/4455129/(WOG_HOOK_AfterRangedAttack);
-
-*?FU(WOG_HOOK_AfterRangedAttack);
-*!SN:X?(hook:y);
-*!FU(WOG_HOOK_AfterAttackMainFunk):P(hook)/?(stackAttackerID:y)/?(stackDefenderID:y);
-*!IF:M^Attacking stack is %(stackAttackerID), defending stack is %(stackDefenderID)^;
-
-*?FU(WOG_HOOK_AfterMeleeAttack);
-*!SN:X?(hook:y);
-*!FU(WOG_HOOK_AfterAttackMainFunk):P(hook)/?(stackAttackerID:y)/?(stackDefenderID:y);
-*!IF:M^Attacking stack is %(stackAttackerID), defending stack is %(stackDefenderID)^;
-
-*?FU(WOG_HOOK_AfterAttackMainFunk);
-*#VA(hook:x) (stackAttackerID:x) (stackDefenderID:x);
-
-*!UN:C(hook)/0/4/?(stackStrucktDefender:y);   
-*!UN:C(hook)/4/4/?(stackStrucktAttacker:y);  
-*!BG:A?(typeAttack:y);
-*!VR(stackAttackerID):S(NO_MON);
-*!VR(stackDefenderID):S(NO_MON);
-
-*!if&(stackStrucktAttacker)<>(FALSE); 
-  *!UN:C(stackStrucktAttacker)/244/4/?(attakerSide:y); 
-  *!UN:C(stackStrucktAttacker)/248/4/?(attakerStackIdInSide:y);
-  *!VR(stackAttackerID):S(attakerSide)*21 +(attakerStackIdInSide); 
-*!en;
-
-*!if&(stackStrucktDefender)<>(FALSE);
-  *!UN:C(stackStrucktDefender)/244/4/?(defenderSide:y);
-  *!UN:C(stackStrucktDefender)/248/4/?(defenderStackIdInSide:y);
-  *!VR(stackDefenderID):S(defenderSide)*21 +(defenderStackIdInSide);
-*!en;
-
-*!FU(WOG_HOOK_AfterShoot):P(stackAttackerID)/(stackDefenderID);
-
-!?FU(OnGameEnter); 
-!!SN:L^EraPlugins\erm_hooker.era^/?(ermHooker:y); 
-!!FU&(ermHooker)=(FALSE):E;                          
-!!SN:A(ermHooker)/^SetHook^/?(hooker:y); 
-!!SN:E(hooker)/1/4462998/(WOG_HOOK_AfterAttackMainFunk); 
-!!SN:E(hooker)/1/4455129/(WOG_HOOK_AfterAttackMainFunk); 
-!?FU(WOG_HOOK_AfterAttackMainFunk);
-!!SN:X?(hook:y);
-!!UN:C(hook)/0/4/?(stackStrucktDefender:y);   
-!!UN:C(hook)/4/4/?(stackStrucktAttacker:y);  
-!!BG:A?(typeAttack:y);
-!!VR(stackAttackerID:y):S(NO_MON); 
-!!VR(stackDefenderID:y):S(NO_MON); 
-!!if&(stackStrucktAttacker)<>(FALSE); 
-  !!UN:C(stackStrucktAttacker)/244/4/?(attakerSide:y); 
-  !!UN:C(stackStrucktAttacker)/248/4/?(attakerStackIdInSide:y);
-  !!VR(stackAttackerID):S(attakerSide)*21 +(attakerStackIdInSide); 
+!!el&i^0_atkspell_altSpell_on^/i^0_atkspell_altSpell^>(NO_SPELL);
+  !!FU(atkspell_CheckStackImmunity):P(defStack)/i^0_atkspell_altSpell^/(atkSide)/?(result);
+  !!BMi^atkspell_stackAttacking^&(result):Ci^0_atkspell_altSpell^/(pos)/i^0_atkspell_altSpellLevel^/i^0_atkspell_altSpellPower^/1;
 !!en;
-!!if&(stackStrucktDefender)<>(FALSE);
-  !!UN:C(stackStrucktDefender)/244/4/?(defenderSide:y);
-  !!UN:C(stackStrucktDefender)/248/4/?(defenderStackIdInSide:y);
-  !!VR(stackDefenderID):S(defenderSide)*21 +(defenderStackIdInSide);
-!!en;
-!!FU(WOG_HOOK_AfterMelee)&(typeAttack)=6:P(stackAttackerID)/(stackDefenderID);
-!!FU(WOG_HOOK_AfterShoot)&(typeAttack)=7:P(stackAttackerID)/(stackDefenderID);
-; end (WOG_HOOK_AfterAttackMainFunk)
-!?FU(WOG_HOOK_AfterMelee);
-!#VA(stackAttackerID:x) (stackDefenderID:x);
-!!IF:M^WOG_HOOK_AfterMelee: %(stackAttackerID) vs %(stackDefenderID)^;
-!?FU(WOG_HOOK_AfterShoot);
-!#VA(stackAttackerID:x) (stackDefenderID:x);
-!!IF:M^WOG_HOOK_AfterShoot: %(stackAttackerID) vs %(stackDefenderID)^;
