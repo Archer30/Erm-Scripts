@@ -1,0 +1,44 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Cast cure every time Gem's troops are attacking (Expert) or after being attacked (Advanced) if Gem's level is more than 20.
+
+
+!?FU(OnBeforeBattleAction);
+!!BG:E?i^arch_defStack^;
+
+!?FU(OnBattleActionEnd)&i^arch_defStack^>(NO_STACK);
+; Check if it was an action that could result in casualties
+!!BG:A?(action:y);
+
+!!if|(action)=(BATTLE_ACTION_WALK_AND_ATTACK)/(action)=(BATTLE_ACTION_SHOOT);
+  ; Check if it was an event one player act against the other
+  !!BG:N?(atkStack:y) Q?(atkSide:y);
+  !!VR(defStack:y):Si^arch_defStack^;
+  !!BM(defStack):I?(defSide:y);
+
+  !!if&(atkSide)<>(defSide);
+
+    !!re (side:y)/(BATTLE_LEFT)/(BATTLE_RIGHT);
+
+      !!if&i^battle_hero_%(side)^=(HERO_GEM);
+        !!HE(HERO_GEM):E?(exp:y)/?(lv:y)/1;
+
+        !!if&(lv)>=20;
+          !!VR(stack:y)&(side)=(atkSide):S(atkStack);
+          !!VR(stack)&(side)=(defSide):S(defStack);
+
+          !!BM(stack):P?(pos:y);
+
+          !!if&(atkSide)=(side);
+            !!BM(stack):C(SPELL_CURE)/(pos)/(SKILL_EXPERT)/3/1;
+          !!el;
+            !!BM(stack):C(SPELL_CURE)/(pos)/(SKILL_ADVANCED)/3/1;
+          !!en;
+        !!en;
+      !!en;
+    !!en;
+  !!en;
+!!en;
