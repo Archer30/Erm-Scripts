@@ -1,0 +1,50 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Funciton for getting a random living stack of a side
+; This is a good example of showing how convenient array can be in Era 3
+
+
+!?FU(arch_GetRandomLivingStackOfASide);
+!#VA(side:x);                           [Side of the stack]
+!#VA(result:x);                         [Return value. Random stack number of the side]
+!#VA(isFromArmy:x);                     [Optional. Boolean. Value for setting whether only stacks from a hero's army are considered as valid]
+
+; Initialization
+!!VR(result):S(NO_STACK);
+!!FU:A?(numArgs:y);
+!!VR(isFromArmy)&(numArgs)<3:S(FALSE);
+
+; Set up a local array for all the living stacks of the side
+!!FU(NewIntArray):P?(livingStacks:y);    [Create the array]
+!!VR(firstStack:y):S(side) *(BATTLE_STACKS_PER_SIDE);
+!!VR(lastStack:y):S(firstStack) +20;
+
+; Loop through all the stacks, add any valid stack number to the array
+!!re i/(firstStack)/(lastStack);
+  !!BMi:T?(type:y) N?(num:y);
+
+  !!if&(isFromArmy);
+    !!BMi:O?(armySlot:y);
+    !!FU(Array_Push)&(type)>(NO_MON)/(num)>0/(armySlot)>-1:P(livingStacks)/i; [Push the found stack id to the end of the array]
+  !!el;
+    !!FU(Array_Push)&(type)>(NO_MON)/(num)>0:P(livingStacks)/i;
+  !!en;
+!!en;
+
+; Check if the array has at least one item
+!!SN:M(livingStacks)/?(size:y);
+
+; Return a random item from he array if applicable
+!!if&(size)>0;
+  !!FU(Array_Shuffle):P(livingStacks);  [Shuffle the array]
+  !!FU(Array_Pop):P(livingStacks)/?(result); [Get the last item of the array and remove the item from the array]
+!!en;
+
+; ========================== TESTING ==========================
+
+!?FU(OnKeyPressed_Battle)&i^key^=(KEY_0);
+!!FU(arch_GetRandomValidStackOfASide):P(BATTLE_LEFT)/?(randStack:y);
+!!IF:M^%(randStack)^;

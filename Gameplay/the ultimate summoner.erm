@@ -57,15 +57,15 @@ ZVSE2
 !!en;
 
 !?FU(tus_CheckIfEligibleToSummon);
-!#VA(side:x) (isEligible:x);
+!#VA(side:x) (result:x);
 
-!!VR(isEligible):S(FALSE);
+!!VR(result):S(FALSE);
 
 !!UN:C6919200/4/?(value:y);
 !!VR(address:y):S(side) *4 +21692 +(value);
 !!UN:C(address)/4/?(stackNum:y);
 
-!!VR(isEligible)&(stackNum)<20:S(TRUE);
+!!VR(result)&(stackNum)<21:S(TRUE);
 
 !?FU(tus_GetRandomPositionForSummon);
 !#VA(side:x) (isDoubleWide:x) (randPos:x) (maxColumn:x);
