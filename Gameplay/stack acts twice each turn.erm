@@ -1,0 +1,46 @@
+ZVSE2
+; Author:   Berserker
+; Engine:   ERM 2.0+
+; Requires: ERA 3.8.5+, Era Erm Framework
+
+; Every stack now acts twice each turn
+
+
+!#FU(NewIntArray):P(BATTLE_MAX_STACKS)/?i^edu_movedTwice^/(M_TEMP);
+
+!?FU(OnBattleRound);
+!!re i/(BATTLE_STACK_FIRST)/(BATTLE_STACK_LAST);
+  !!SN:Mi^edu_movedTwice^/i/0;
+!!en;
+
+!!VRi^edu_actingStack^:S(NO_STACK);
+
+!?FU(OnBeforeBattleAction)&i^battle_round^>=0;
+!!VRi^edu_actingStack^:S(NO_STACK);
+
+!!BG:A?(action:y);
+!!FU&(action)<>(BATTLE_ACTION_WALK)/
+     (action)<>(BATTLE_ACTION_WALK_AND_ATTACK)/
+     (action)<>(BATTLE_ACTION_SHOOT)/
+     (action)<>(BATTLE_ACTION_CATAPULT)/
+     (action)<>(BATTLE_ACTION_MONSTER_CAST)/
+     (action)<>(BATTLE_ACTION_TENT_HEAL):E;
+
+!!BG:N?i^edu_actingStack^;
+
+!?FU(OnBattleActionEnd)&i^edu_actingStack^<>(NO_STACK);
+!!SN:Mi^edu_movedTwice^/i^edu_actingStack^/?(movedTwice:y);
+!!FU&(movedTwice)>0:E;
+
+!!BMi^edu_actingStack^:Fd~(MON_FLAG_ACTED);
+
+!?FU(OnBeforeBattleStackTurn)&i^edu_actingStack^<>(NO_STACK);
+!#VA(stack:x);
+
+!!SN:Mi^edu_movedTwice^/i^edu_actingStack^/?(movedTwice:y);
+!!FU&(movedTwice)>0:E;
+
+!!BMi^edu_actingStack^:T?(monType:y) N?(monNum:y);
+!!FU|(monType)=(NO_MON)/(monNum)<=0:E;
+!!SN:Mi^edu_movedTwice^/i^edu_actingStack^/1;
+!!VR(stack):Si^edu_actingStack^;

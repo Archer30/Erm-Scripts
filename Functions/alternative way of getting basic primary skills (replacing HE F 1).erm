@@ -38,9 +38,9 @@ ZVSE2
 !!FU(NewIntArray):P(ART_LAST_WOG)/?i^arch_artBonusesTable^/(M_TEMP);
 
 !?FU(OnStartOrLoad);
-!!FU(arch_artBonusesTable):P;
+!!FU(arch_SetUpArtBonusesTable):P;
 
-!?FU(arch_artBonusesTable);
+!?FU(arch_SetUpArtBonusesTable);
 ; Artifacts with attack bonuses
 !!FU(PackUnion):P2/8/0/8/0/8/0/8/?(packedValue7:y);
 !!FU(PackUnion):P3/8/0/8/0/8/0/8/?(packedValue8:y);
@@ -121,7 +121,7 @@ ZVSE2
 !#VA(key:x) (preventDefault:x);
 !!VR(preventDefault):S(TRUE);
 
-!!FU(arch_artBonusesTable):P;
+!!FU(arch_SetUpArtBonusesTable):P;
 !!OW:C?(player:y);
 !!OW:A(player)/?(hero:y);
 !!FU(arch_GetBasicPrimarySkills):P(hero)/?(atk:y)/?(def:y)/?(pwr:y)/?(knl:y);
