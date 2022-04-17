@@ -2,7 +2,7 @@ ZVSE2
 ; Author:   Archer30
 ; Special thanks to wessonsm
 ; Engine:   ERM 2.0+
-; Requires: ERA 3.3+, Era Erm Framework, 77 wog - map rules
+; Requires: ERA 3.3+, Era Erm Framework
 
 ; Summon random enemy stacks every X round for battles between human and AI
 
@@ -20,7 +20,7 @@ ZVSE2
 !#VA(hero:x);                           [hero who can summon. -1 for any hero/no hero]
 !#VA(type:x);                           [Type of summoning monster]
 !#VA(num:x);                            [number of monster]
-!#VA(maxColumn:x);                      [Max coloumn allowed for summoning from the first column of each side]
+!#VA(maxColumn:x);                      [Optional. Max coloumn allowed for summoning from the first column of each side]
 
 ; Exit if not targeted hero
 !!FU&i^battle_round^<>(round)/(round)<>-1:E;
@@ -42,9 +42,9 @@ ZVSE2
 
 !!if&(isEligible);
   !!MA:X(type)/?(flags:y);
-  !!VR(isDoubleWide:y):S(flags) &(MON_FLAG_WIDE);
+  !!VR(isWide:y):S(flags) &(MON_FLAG_WIDE);
 
-  !!FU(tus_GetRandomPositionForSummon):P(side)/(isDoubleWide)/?(randPos:y)/(maxColumn);
+  !!FU(tus_GetRandomPosition):P(side)/(isWide)/?(randPos:y)/(maxColumn);
 
   !!if&(randPos)>-1;
     ; Summon the stack and play sound
@@ -67,17 +67,23 @@ ZVSE2
 
 !!VR(result)&(stackNum)<21:S(TRUE);
 
-!?FU(tus_GetRandomPositionForSummon);
-!#VA(side:x) (isDoubleWide:x) (randPos:x) (maxColumn:x);
+!?FU(tus_GetRandomPosition);
+!#VA(side:x) (isWide:x) (randPos:x) (maxColumn:x);
 
 !!VR(randPos):S-1;
+
+; Set max column to 15 (all the columns are allowed) if the parametre wasn't defined
+!!FU:A?(numArgs:y);
+!!VR(maxColumn)&(numArgs)<4:S15;
+
 !!FU(NewIntArray):P?(validPosArray:y);
 
+; Loop through all the positions and fill in the array for available ones
 !!re (pos:y)/1/185;
   !!VR(isAvailPos:y):S(TRUE);
     !!FU(tus_CheckIfHexIsFree):P(side)/(pos)/(maxColumn)/?(isAvailPos);
   
-  !!if&(isDoubleWide)/(isAvailPos);
+  !!if&(isWide)/(isAvailPos);
     !!VR(secPos:y)&(side)=(BATTLE_LEFT):S(pos) +1;
     !!VR(secPos)&(side)=(BATTLE_RIGHT):S(pos) -1;
     !!FU(tus_CheckIfHexIsFree):P(side)/(secPos)/(maxColumn)/?(isAvailPos);
@@ -86,6 +92,7 @@ ZVSE2
   !!FU(Array_Push)&(isAvailPos):P(validPosArray)/(pos);
 !!en;
 
+; Get a random valid position from the array
 !!SN:M(validPosArray)/?(arraySize:y);
 
 !!if&(arraySize)>=1;
@@ -101,12 +108,14 @@ ZVSE2
 
 !!VR(realColumn:y):S(pos) %17;
 
+; Get the column number to each side
 !!if&(side)=(BATTLE_LEFT);
   !!VR(column:y):S(realColumn);
 !!el;
   !!VR(column):S16 -(realColumn);
 !!en;
 
+; Store the position if it is not overlapped with a statck, on obstacles or reaches the max column limit
 !!if&(column)>0/(column)<=(maxColumn);
   !!BU:E(pos)/?(stack:y) O(pos)/?(obstacleFlag:y);
   !!VR(isAvailPos)|(stack)>(NO_STACK)/(obstacleFlag)>0:S(FALSE);
