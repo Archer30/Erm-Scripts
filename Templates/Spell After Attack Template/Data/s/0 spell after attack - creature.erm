@@ -39,7 +39,6 @@ ZVSE2
 !#VA(atkStack:x) (defStack:x);
 
 ; Exit if not ideal creature or the attacked target is dead
-!!BG:N?(atkStack:y) E?(defStack:y);
 !!BM(atkStack):T?(mon:y);
 !!FU|(mon)<>i^0_atkspell_triggerMon^/(defStack)<=(NO_STACK):E;
 
