@@ -1,0 +1,12 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Allows emissaries to attack as normal monsters
+
+!?FU(OnStartOrLoad);
+!!UN:C7718934/(UNC_INT)/50000;
+!!UN:C7718943/(UNC_INT)/50001;
+!!UN:C7727325/(UNC_INT)/50000;
+!!UN:C7727334/(UNC_INT)/50001;

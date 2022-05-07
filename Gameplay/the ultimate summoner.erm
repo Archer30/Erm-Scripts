@@ -48,7 +48,7 @@ ZVSE2
 
   !!if&(randPos)>-1;
     ; Summon the stack and play sound
-    !!SN:P^SUMNELM^;
+    !!SN&i^battle_isVisible^:P^SUMNELM^;
     !!BU:S(type)/(num)/(randPos)/(side)/-1/(TRUE);
     ; Add in the flag of summoning creature so the stack ID would be released after killed
     !!BU:E(randPos)/?(stack:y);
