@@ -54,7 +54,7 @@ ZVSE2
   ; > number of arts
   !!VRy36:S0;                           [quantity of art]
   !!VRy36&y13>0:+y16+1;                 [+source]
-  !!VRy36&y23>0:+y26+1;                 [+source]
+  !!VRy36&y23>0:+y26+1;                 [+target]
   !!VRy36&y36>0:-1;
   ; > artifact number (set to Warlord's Banner)
   !!VRy34&y33=0:S(ART_WARLORDS_BANNER);

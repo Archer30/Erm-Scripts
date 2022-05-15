@@ -28,14 +28,14 @@ ZVSE2
 !?FU(atkspell_OnAfterShoot)&i^0_atkspell_actionMode^<>0;
 !#VA(atkStack:x) (defStack:x);
 
-!!FU(atkspell_CastAfterAttack):P(atkStack)/(defStack);
+!!FU(atkspell_0_CastAfterAttack):P(atkStack)/(defStack);
 
 !?FU(atkspell_OnAfterMelee)&i^0_atkspell_actionMode^<>1;
 !#VA(atkStack:x) (defStack:x);
 
-!!FU(atkspell_CastAfterAttack):P(atkStack)/(defStack);
+!!FU(atkspell_0_CastAfterAttack):P(atkStack)/(defStack);
 
-!?FU(atkspell_CastAfterAttack);
+!?FU(atkspell_0_CastAfterAttack);
 !#VA(atkStack:x) (defStack:x);
 
 ; Exit if not ideal creature or the attacked target is dead
