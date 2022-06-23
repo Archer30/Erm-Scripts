@@ -1,0 +1,38 @@
+ZVSE2
+; Author:   daemon_n
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Changethe damage dealing with BM:K
+
+
+!?FU(bmk_AlterBMKDamage);
+!#VA(stack:x) (damage:x) (newDamage:x);
+
+!!VR(newDamage):S(damage);
+
+; ========================== TESTING ==========================
+; Set BM:K damage to 1/2 for Azure Dragon
+!!BM(stack):T?(type:y);
+!!VR(newDamage)&(type)=(MON_AZURE_DRAGON)::2;
+; ======================== END TESTING ========================
+
+!?FU(OnStartOrLoad);
+!!SN:L^erm_hooker.era^/?(hooker:y);
+!!FU&(hooker)=0:E;
+
+!!SN:A(hooker)/^SetHook^/?(address:y);
+!!SN:E(address)/1/7427990/(bmk_OnBeforeBMKDamage); [trigger right before BM:K damage applying on the stack]
+
+!?FU(bmk_OnBeforeBMKDamage);
+!#VA(address:x);
+
+; Get the original damage
+!!UN:C(address)/(STRUCT_HOOK_CONTEXT_EBP)/(UNC_INT)/?(ebp:y);
+!!UN:C(ebp)/8/(UNC_INT)/?(stackStruct:y);
+!!UN:C(ebp)/12/(UNC_INT)/?(damage:y);
+!!UN:C(stackStruct)/244/4/?(side:y) C(stackStruct)/248/4/?(stackBySide:y);
+!!VR(stack:y):S(side)* (BATTLE_STACKS_PER_SIDE) + (stackBySide);
+
+!!FU(bmk_AlterBMKDamage):P(stack)/(damage)/?(newDamage:y);
+!!UN:C(ebp)/12/(UNC_INT)/(newDamage);
