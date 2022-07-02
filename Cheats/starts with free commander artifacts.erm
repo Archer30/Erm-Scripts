@@ -1,0 +1,21 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Give all the commander artifacts to all the heroes belongs to a human player on day 1
+
+
+!?FU(OnEveryDay)&i^timerOnce^/i^timerIsHuman^/i^timerDay^=1;
+; loop through all the heroes
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HEi:O?(owner:y);
+
+  ; Add in commander artifact if the hero belongs to 
+  *!if&(owner)=i^timerOwner^;
+    ; Give basic commander artifacts to the commander
+    !!COi:A4/(ART_AXE_OF_SMASHING)/0/(ART_MITHRIL_MAIL)/0/(ART_SWORD_OF_SHARPNESS)/0/(ART_PENDANT_OF_SORCERY)/0/(ART_BOOTS_OF_HASTE)/0/(ART_HARDENED_SHIELD)/0;
+    ; Give "special" commander artifacts to the hero
+    !!HEi:A4/(ART_HELM_OF_IMMORTALITY) A4/(ART_BOW_OF_SEEKING) A4/(ART_DRAGON_EYE_RING) A4/(ART_SLAVAS_RING_OF_POWER);
+  *!en;
+!!en;

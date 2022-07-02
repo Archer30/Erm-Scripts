@@ -1,0 +1,63 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Mines now provide additional resources if guarded. The resource given is calculated by the total HP of guardians.
+
+
+; ============== SETTINGS ==============
+!#VRi^miners_on^:S(TRUE);               [This script will be activated only if true]
+!#VRi^miners_commonRate^:S5000;         [Required HP for 1 Wood/Ore]
+!#VRi^miners_rareRate^:S10000;          [Required HP for 1 Mercury/Sulfur/Crystal/Gems]
+!#VRi^miners_goldRate^:S10;             [Required HP for 1 gold]
+; ============ END SETTINGS ============
+
+
+!?FU(miners_RestrainValues);
+!!VRi^miners_on^:F(FALSE)/(TRUE);
+
+!#FU(miners_RestrainValues):P;
+
+!?FU(OnEveryDay)&i^timerOnce^/i^timerDay^>1/i^miners_on^;
+!!FU(miners_GiveExtraRes):P;
+
+!?FU(miners_GiveExtraRes);
+!!VR(x:y):S-1;
+
+!!re i;
+  !!UN:U(OBJ_MINE)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  ; Skip if the mine belongs to no owner or AI players (AI never guards their mines)
+  !!MN(x)/(y)/(z):O?(owner:y)/1;
+  !!co&(owner)=(NO_OWNER);
+
+  !!OW:I(owner)/?(isAi:y);
+  !!co&(isAi);
+
+  ; Calculate the total hp of all guarded monsters
+  !!VR(hpGuards:y):S0;
+
+  !!re (slot:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!MN(x)/(y)/(z):M(slot)/?(mon:y)/?(qty:y);
+    !!co|(mon)=(NO_MON)/(qty)<=0;
+
+    !!MA:P(mon)/?(hp:y);
+    !!VR(hpSlot:y):S(hp) *(qty);
+    !!VR(hpGuards):+(hpSlot);
+  !!en;
+
+  !!co&(hpGuards)=0;
+
+  ; Calculate and give additional resources according to the type of mine and HP of guardians
+  !!MN(x)/(y)/(z):R?(res:y)/1;
+  !!VR(rate:y)|(res)=(RES_WOOD)/(res)=(RES_ORE):Si^miners_commonRate^;
+  !!VR(rate)|(res)=(RES_MERCURY)/(res)=(RES_SULFUR)/(res)=(RES_CRYSTAL)/(res)=(RES_GEMS):Si^miners_rareRate^;
+  !!VR(rate)&(res)=(RES_GOLD):Si^miners_goldRate^;
+
+  !!VR(addRes:y):S(hpGuards) :(rate);
+  !!OW:R(owner)/(res)/d(addRes);
+!!en;
+
+!!UN:R2;
