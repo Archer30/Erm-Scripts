@@ -1,0 +1,42 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Change the terrain type of a location when a hero visits a specific map event or object.
+
+
+; ========================== TESTING ==========================
+; Triggers on visiting a specific event
+!?LE1/2/0;
+!!FU(terrain_ChangeTerrainType):P5/5/0/9/0;
+
+; Triggers on visiting a specific object (must be the entrance)
+!?OB1/3/0;
+!!FU(terrain_ChangeTerrainType):P5/5/0/6/1;
+; ======================== END TESTING ========================
+
+!?FU(terrain_ChangeTerrainType);
+!#VA(targetX:x) (targetY:x) (targetZ:x);    [Targeted coordinates for terrain alteration.]
+!#VA(terrainType:x) (terrainSubtype:x);     [Type and Subtype of the new terrain.]
+!#VA(player:x);                             [OPT. Allow only a specific player to trigger. Default: ANY_PLAYER.]
+
+; Exit if the triggering hero does not belongs to a specific player (if declared)
+!!FU:A?(numArgs:y);                         [Check the number of arguments passed from FU:P]
+
+!!if&(numArgs)>5/(player)>(NO_PLAYER);      [If a player colour is declared (a.k.a more than 5 args), check if the specific colour matches the owner of the hero]
+  !!HE(CURRENT_HERO):O?(owner:y);
+  !!FU&(owner)<>(player):E;
+!!el;                                       [If a player colour was not declared, set player to ANY_PLAYER]
+  !!VR(player):S(ANY_PLAYER);
+!!en;
+
+; Exit if targeted terrain matches the new type and subtype (nothing has to be changed)
+!!TR(targetX)/(targetY)/(targetZ):T?(origType:y)/(origSubtype:y)/d/d/d/d/d/d;
+!!FU&(origType)=(terrainType)/(origSubtype)=(terrainSubtype):E;
+
+; Change the terrain if all the requirements are met
+!!TR(targetX)/(targetY)/(targetZ):T(terrainType)/(terrainSubtype)/d/d/d/d/d/d;
+
+; Update the screen
+!!SN:D;
