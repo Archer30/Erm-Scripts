@@ -1,0 +1,73 @@
+ZVSE2
+; Author:   Berserker
+; Updated by Hawaiing
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+!?FU(OnHeroScreenMouseClick)&i^mouse_action^=(MOUSE_LMB_PRESSED);
+!!CM:I?y1 F?y2;
+!!FU|y2<>0/y1<68/y1>74:E; exit if not LMB or not slots
+
+!!UN:C6911880/4/?y3; y3 - source slot
+!!VRy4:Sy1-68; y4 - destination slot
+!!FU|y3=y4/y3=-1:E; exit if same slot or no selection
+
+!!UN:C6916756/4/?y30;
+!!FU&y30<>0:E;
+
+!!CM:R0;
+
+!!HE-1:C0/y3/?y10/?y11/?y12 C0/y4/?y20/?y21/?y22;
+!!EX-1/y3:R?y13/?y14/?y15/?y16;
+!!EX-1/y4:R?y23/?y24/?y25/?y26;
+
+; y10..y16 - source info
+; y20..y26 - destination info
+
+!!if&y20=-1; if no destination stack
+   ; no exp and quantity
+   !!VRy21:S0;
+   !!VRy22:S0;
+!!en;
+
+!!if&y10=y20; join operation
+   !!VRy21:+y11;
+
+   ; fix all exp bugs
+   !!VRe1:Sy11*y12; e1 - source stack exp
+   !!VRe2:Sy21*y22; e2 - destination stack exp
+   !!VRe2:+e1; e2 - joined stack exp
+   !!VRe1:Sy11+y21; e1 - joined number of creatures
+   !!VRe2::e1; e2 - resulting exp per creature
+   !!VRe2&e2>1000000000:S1000000000; fix limit
+   !!VRy22:Se2; convert float to integer
+
+   ; combine artifacts:
+   ; > artifacts present?
+  !!VRy33:Sy23+y13;
+  !!VRy33&y33>0:S1;
+
+  ; > option
+  !!VRy35:Sy25;                         [use the option of the target]
+  !!VRy35&y13=1/y23=0:Sy15;             [use the option of the souce if target has no art]
+
+  ; > number of arts
+  !!VRy36:S0;                           [quantity of art]
+  !!VRy36&y13>0:+y16+1;                 [+source]
+  !!VRy36&y23>0:+y26+1;                 [+target]
+  !!VRy36&y36>0:-1;
+  ; > artifact number (set to Warlord's Banner)
+  !!VRy34&y33=0:S(ART_WARLORDS_BANNER);
+
+  ; assign destination and erase source
+  !!HE-1:C0/y3/-1/0/0/2 C0/y4/y20/y21/y22/2;
+  !!EX-1/y3:R0/-1/0/0;                  [source]
+  !!EX-1/y4:Ry33/y34/y35/y36;           [target]
+!!el; move operation
+  !!HE-1:C0/y3/y20/y21/y22/2 C0/y4/y10/y11/y12/2;
+  !!EX-1/y3:Ry23/y24/y25/y26;
+  !!EX-1/y4:Ry13/y14/y15/y16;
+!!en;
+
+!!UN:C6911880/4/-1; disable selection
+!!SN:D;

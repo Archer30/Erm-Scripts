@@ -1,0 +1,52 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Divide all the AI values by 15 in order to prevent negative values after gathering a massive amount of troops.
+
+
+!?FU(OnAfterErmInstructions);
+; Divide AI values only when Peasant's AI value is original (15)
+!!MA:I(MON_PEASANT)/?(aiValuePeasant:y);
+
+!!if&(aiValuePeasant)=15;
+  !!FU(GetMaxMonsterId):P?(lastMon:y);
+  !!VR(arraySize:y):S(lastMon) +1;
+  !!FU(NewIntArray):P(arraySize)/?i^aivalue_origAiValues^/(M_STORED);
+
+  !!re i/(MON_FIRST)/(lastMon);
+    !!MA:Ii/?(aiValue:y);
+    !!SN:Vi^aivalue_origAiValues^/i/(aiValue);
+  !!en;
+
+  !!VRi^aivalue_aiValuesDivided^:S(TRUE);
+!!en;
+
+!!FU(aivalue_ManageAIValues):P1;
+
+!?OB(OBJ_ALTAR_OF_SACRIFICE);
+!!FU(aivalue_ManageAIValues):P0;
+
+!$OB(OBJ_ALTAR_OF_SACRIFICE);
+!!FU(aivalue_ManageAIValues):P1;
+
+!?FU(aivalue_ManageAIValues)&i^aivalue_aiValuesDivided^;
+!#VA(mode:x);                           [0 - restoration, 1 - division]
+
+!!FU(GetMaxMonsterId):P?(lastMon:y);
+
+; Restoration
+!!if&(mode)=0;
+  !!re i/(MON_FIRST)/(lastMon);
+    !!SN:Vi^aivalue_origAiValues^/i/?(aiValue:y);
+    !!MA:Ii/(aiValue);
+  !!en;
+; Division
+!!el;
+  !!re i/(MON_FIRST)/(lastMon);
+    !!MA:Ii/d:15;
+  !!en;
+
+  !!VRi^aivalue_aiValuesDivided^:S(TRUE);
+!!en;

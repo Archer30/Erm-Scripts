@@ -35,7 +35,8 @@ ZVSE2
 !!UN:P219/(enhCmdArtOn);
 
 !?FU(OnAfterErmInstructions);
-!!FU(NewIntArray):P(ART_LAST_WOG)/?i^arch_artBonusesTable^/(M_TEMP);
+!!VR(arraySize:y):S(ART_LAST_WOG) +1;
+!!FU(NewIntArray):P(arraySize)/?i^arch_artBonusesTable^/(M_TEMP);
 
 !?FU(OnStartOrLoad);
 !!FU(arch_SetUpArtBonusesTable):P;

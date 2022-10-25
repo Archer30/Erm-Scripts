@@ -1,0 +1,15 @@
+ZVSE2
+; Author:   feanor
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Play hero animation on the battlefield
+
+!?FU(WOG_PlayHeroAnimation);
+!#VA(side:x) (animation:x);
+
+!!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbmgr:y);
+!!VR(groupAdd:y):S(side) *4 +(cmbmgr) +21476; [0 - left, 1 - right]
+!!VR(frameAdd:y):S(side) *4 +(cmbmgr) +21484; [0 - left, 1 - right]
+!!UN:C(groupAdd)/(UNC_INT)/(animation); [frame group number. 2 - failure, 3 - victory]
+!!UN:C(frameAdd)/(UNC_INT)/0;           [frame number]

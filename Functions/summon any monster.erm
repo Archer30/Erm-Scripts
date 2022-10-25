@@ -1,0 +1,26 @@
+ZVSE2
+; Author:   daemon_n
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Function to summon any number of any creature on the battlefield
+
+
+!?FU(sum_Battle_SummonStack);
+!#VA(monType:x) (monAmount:x) (side:x) (numberStack:x);
+
+!!UN:C(COMBAT_MANAGER)/4/?(cmbMgr:y) C(cmbMgr)/78528/4/?(oldSide:y) C(cmbMgr)/78528/4/(side);
+!!SS(SPELL_EARTH_ELEMENTAL):E0/?(oldEff:y) E0/1;
+
+!!re i/0/(numberStack)/1/-1;
+  !!SN:P^SumnElm^;
+  !!SN:E5927824/(CALLCONV_THISCALL)/(cmbMgr)/(SPELL_EARTH_ELEMENTAL)/(monType)/(monAmount)/0;
+!!en;
+
+!!SS(SPELL_EARTH_ELEMENTAL):E0/(oldEff:y);
+!!UN:C(cmbMgr)/78528/4/(oldSide);
+
+; ========================== TESTING ==========================
+
+!?FU(OnBattleRound)&i^battle_round^=0;
+!!FU(sum_Battle_SummonStack):P(MON_ARCHANGEL)/1/(BATTLE_LEFT)/2;

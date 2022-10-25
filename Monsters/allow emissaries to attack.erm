@@ -5,6 +5,7 @@ ZVSE2
 
 ; Allows emissaries to attack as normal monsters
 
+
 !?FU(OnStartOrLoad);
 !!UN:C7718934/(UNC_INT)/50000;
 !!UN:C7718943/(UNC_INT)/50001;

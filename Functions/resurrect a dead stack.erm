@@ -44,7 +44,7 @@ ZVSE2
 ; set stack orientation
 !!UN:C(stack)/68/4/?(orientation:y);
 !!SN&(orientation)=(side):E4482112/2/(stack)/1;
-; и восстанавливаем исходное положение (стойка)
+; and restore the original position (stand)
 !!SN:E4482656/2/(stack)/2/1/0;
 
 !?FU(res_BattleStack_PlayAnimation);
@@ -91,7 +91,7 @@ ZVSE2
 
 ; ========================== TESTING ==========================
 
-!?FU(res_ResurrectedDeadStack);
+!?FU(OnKeyPressed)&i^key^=(KEY_0);
 !!VR(resurrectedHP:y):S10000;
 !!VR(stackID:y):S0;
 !!FU(res_ResurrectedDeadStack):P(stackID)/(resurrectedHP);

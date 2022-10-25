@@ -30,8 +30,8 @@ ZVSE2
 !!UN:C(hook)/0/(UNC_INT)/?(stackStrucktDefender:y);   
 !!UN:C(hook)/4/(UNC_INT)/?(stackStrucktAttacker:y);  
 !!BG:A?(typeAttack:y);
-!!VR(stackAttackerID:y):S(NO_MON); 
-!!VR(stackDefenderID:y):S(NO_MON); 
+!!VR(stackAttackerID:y):S(NO_STACK); 
+!!VR(stackDefenderID:y):S(NO_STACK); 
 
 !!if&(stackStrucktAttacker)<>(FALSE); 
   !!UN:C(stackStrucktAttacker)/244/(UNC_INT)/?(attakerSide:y); 
