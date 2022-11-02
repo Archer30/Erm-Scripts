@@ -1,5 +1,5 @@
 ZVSE2
-; Author:   daemon_n
+; Author:   daemon_n and Archer30
 ; Engine:   ERM 2.0+
 ; Requires: ERA 3.3+, Era Erm Framework
 
@@ -9,16 +9,23 @@ ZVSE2
 !?FU(sum_Battle_SummonStack);
 !#VA(monType:x) (monAmount:x) (side:x) (numberStack:x);
 
-!!UN:C(COMBAT_MANAGER)/4/?(cmbMgr:y) C(cmbMgr)/78528/4/?(oldSide:y) C(cmbMgr)/78528/4/(side);
-!!SS(SPELL_EARTH_ELEMENTAL):E0/?(oldEff:y) E0/1;
+!!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbMgr:y);
+!!UN:C(cmbMgr)/78528/(UNC_INT)/?(origActiveSide:y) C(cmbMgr)/78528/(UNC_INT)/(side);
+
+!!VR(summonedMonOffset:y):S78504;
+!!VR(summonedMonOffset)&(side)=(BATTLE_RIGHT):+4;
+!!UN:C(cmbMgr)/(summonedMonOffset)/(UNC_INT)/?(origSummonedMon:y);
+
+!!SS(SPELL_EARTH_ELEMENTAL):E0/?(origEff:y) E0/1;
 
 !!re i/0/(numberStack)/1/-1;
   !!SN:P^SumnElm^;
   !!SN:E5927824/(CALLCONV_THISCALL)/(cmbMgr)/(SPELL_EARTH_ELEMENTAL)/(monType)/(monAmount)/0;
 !!en;
 
-!!SS(SPELL_EARTH_ELEMENTAL):E0/(oldEff:y);
-!!UN:C(cmbMgr)/78528/4/(oldSide);
+!!SS(SPELL_EARTH_ELEMENTAL):E0/(origEff:y);
+!!UN:C(cmbMgr)/(summonedMonOffset)/(UNC_INT)/(origSummonedMon);
+!!UN:C(cmbMgr)/78528/(UNC_INT)/(origActiveSide);
 
 ; ========================== TESTING ==========================
 
