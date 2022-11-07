@@ -1,0 +1,46 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.9+, Era Erm Framework
+
+; Mysticism now grants extra mana regen for 5%/10%/20% of max mana.
+
+
+!?FU(mys_GetManaRegenRatio);
+!#VA(mysLevel:x) (ratio:x);
+
+!!VR(ratio):S0;
+
+!!if&(mysLevel)=(SKILL_BASIC);
+  !!VR(ratio):S5;                       [5% of max mana as extra mana regen]
+!!el&(mysLevel)=(SKILL_ADVANCED);
+  !!VR(ratio):S10;                      [10% of max mana as extra mana regen]
+!!el&(mysLevel)>=(SKILL_EXPERT);
+  !!VR(ratio):S20;                      [20% of max mana as extra mana regen]
+!!en;
+
+!?FU(OnEveryDay)&i^timerDay^>1/i^timerOnce^;
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HEi:S(SKILL_MYSTICISM)/?(level:y);
+
+  !!if&(level)>(SKILL_NOT_LEARNED);
+    !!HEi:I?(currMana:y)/1;
+    !!FU(mys_Hero_GetFullSpellPoints):Pi/?(maxMana:y);
+
+    !!if&(currMana)<(maxMana);
+      !!VR(lostMana:y):S(maxMana) -(currMana);
+      !!FU(mys_GetManaRegenRatio):P(level)/?(ratio:y);
+      !!VR(regenMana:y):S(ratio) *(maxMana) :100 F0/(lostMana);
+      !!HEi&(regenMana)>0:Id(regenMana)/1;
+    !!en;
+  !!en;
+!!en;
+
+!?FU(mys_Hero_GetFullSpellPoints);
+!#VA(hero:x) (result:x);
+
+!!HE(hero):Z?(heroStruct:y);            [get hero structure]
+!!UN:C(heroStruct)/1145/1/?(knowledge:y);(get hero knowledge]
+!!SN:E5131040/(CALLCONV_THISCALL_FLOAT)/(heroStruct); [get Intelligence power]
+!!VRe1:*10 *(knowledge);                [e1, emul to get max SP]
+!!VR(result):Se1;                       [return max hero SP]
