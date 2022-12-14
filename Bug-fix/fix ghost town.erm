@@ -19,8 +19,11 @@ ZVSE2
     !!UN:P905/(FALSE);
   !!el&(owner)>(NO_OWNER);
     !!CA0/i:P?(x:y)/?(y:y)/?(z:y);
-    !!OB(x)/(y)/(z):T?(type:y);
-    !!CA0/i&(type)<>(OBJ_TOWN):O(NO_OWNER);
+
+    !!VR(searchX:y):S(x) -1;
+    !!UN:U(OBJ_TOWN)/(ANY_OBJ)/-1/(searchX)/(y)/(z);
+
+    !!CA0/i&(searchX)<>(x):O(NO_OWNER);
   !!en;
 !!en;
 
