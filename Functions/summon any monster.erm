@@ -3,7 +3,7 @@ ZVSE2
 ; Engine:   ERM 2.0+
 ; Requires: ERA 3.3+, Era Erm Framework
 
-; Function to summon any number of any creature on the battlefield
+; Function to summon any number of creature on the battlefield
 
 
 !?FU(sum_Battle_SummonStack);

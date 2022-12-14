@@ -1,0 +1,25 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Fix occasionally a neutral stack with invalid quantity is put on the map. These stacks would be removed from the map here.
+
+
+!?FU(OnEveryDay)&i^timerOnce^;
+!!UN:P904/(TRUE) P905/(FALSE);
+
+!!re i/(MAP_TOWN_FIRST)/(MAP_TOWN_LAST);
+  !!CA0/i:O?(owner:y);
+  !!UN:P905/?(hasError:y);
+
+  !!if&(hasError);
+    !!UN:P905/(FALSE);
+  !!el&(owner)>(NO_OWNER);
+    !!CA0/i:P?(x:y)/?(y:y)/?(z:y);
+    !!OB(x)/(y)/(z):T?(type:y);
+    !!CA0/i&(type)<>(OBJ_TOWN):O(NO_OWNER);
+  !!en;
+!!en;
+
+!!UN:P904/(FALSE) P905/(FALSE);
