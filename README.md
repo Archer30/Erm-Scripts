@@ -7,4 +7,4 @@ Simply save any script you like as an .erm file and place in this location:
 
 ...\Mods\\[new folder]\Data\s\
 
-The filename of [new folder] could be anything. And then enable the [new folder] mod you just created from mod manager and see whether it works in the game.
+The filename of [new folder] could be anything. Enable the [new folder] mod from mod manager and voila. 
