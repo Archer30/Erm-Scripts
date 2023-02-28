@@ -1,0 +1,11 @@
+变狼技能模板
+
+作者：Archer30
+
+
+用于让任意生物拥有独特的变狼（变形）技能的模板。
+所有的设置都在 游戏根目录\Mods\Lycanthropy Template\Data\s\0 lycan - specific creature.erm中。
+
+要创建新的变狼技能方案的话，只需要在0 lycan - specific creature.erm中设置你想要的数值即可。
+
+要创建2个以上的变狼技能方案时，需要你复制0 lycan - specific creature.erm在同一个路径中，并把“0”换成其他数字。在新脚本中也要搜索替换所有的“0_”为“其他数字_”（在文本编辑器中按“Ctrl+H”）。

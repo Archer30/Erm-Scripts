@@ -1,0 +1,74 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Your creature pays tax to you.
+
+
+; ============== SETTINGS ==============
+!#VRi^0_tax_mon^:S(MON_PEASANT);        [creature that pays tax]
+!#VRi^0_tax_amount^:S1;                 [amount of gold generates every unit/day]
+; ============ END SETTINGS ============
+
+
+!?FU(OnEveryDay);
+; Check for heroes
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  ; Skip if not the current player's hero
+  !!HEi:O?(owner:y);
+  !!co&(owner)<>i^timerOwner^;
+
+  ; Look for the tax payers
+  !!re (slot:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!HEi:C0/(slot)/?(mon:y)/?(qty:y);
+    !!co&(mon)<>i^0_tax_mon^;
+
+    ; Calculate the amount of tax and add to the owner
+    !!VR(bonusGoldHero:y):S(qty) *i^0_tax_amount^;
+  !!en;
+!!en;
+
+; Check for towns
+!!re i;
+  !!UN:U(OBJ_TOWN)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  ; Skip if not the current player's town
+  !!CA(x)/(y)/(z):O?(owner);
+  !!co&(owner)<>i^timerOwner^;
+
+  ; Look for tax payers
+  !!re (slot)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!CA(x)/(y)/(z):M2/(slot)/?(mon)/?(qty);
+    !!co&(mon)<>i^0_tax_mon^;
+
+    ; Calculate the amount of tax and add to the owner
+    !!VR(bonusGoldTown):S(qty) *i^0_tax_amount^;
+  !!en;
+!!en;
+
+; Check for garrisons
+!!re i;
+  !!UN:U(OBJ_GARRISON)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  ; Skip if not the current player's garrison
+  !!GR(x)/(y)/(z):O?(owner);
+  !!co&(owner)<>i^timerOwner^;
+
+  ; Look for tax payers
+  !!re (slot)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!GR(x)/(y)/(z):G/(slot)/?(mon)/?(qty);
+    !!co&(mon)<>i^0_tax_mon^;
+
+    ; Calculate the amount of tax and add to the owner
+    !!VR(bonusGoldGarrison):S(qty) *i^0_tax_amount^;
+  !!en;
+!!en;
+
+!!OW:Ri^timerOwner^/(RES_GOLD)/?(gold:y);
+!!VR(gold):+(bonusGoldHero) +(bonusGoldTown) +(bonusGoldGarrison);
+!!OW:Ri^timerOwner^/(RES_GOLD)/(gold);
+
+!!UN:R2;

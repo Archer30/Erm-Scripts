@@ -1,0 +1,11 @@
+Lycanthropy Template
+
+Author: Archer30
+
+
+Lycanthropy template for creating your unique Lycanthropy ability.
+All the settings are in ...Mods\Lycanthropy Template\Data\s\0 lycan - creature.erm.
+
+In order to set up Lycanthropy ability for a creature, simply modify the settings in 0 lycan - creature.erm to the values you like. 
+
+The second or more Lycanthropy abilities needs to be created by copying 0 lycan - creature.erm to the same location and rename "0" to another number. Also replace all the "0_" with "[custom number]_" in the new script (by pressing "Ctrl+H" from the text editor).

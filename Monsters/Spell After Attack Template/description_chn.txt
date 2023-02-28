@@ -1,0 +1,12 @@
+攻击后施法模板
+
+作者：Archer30
+
+
+用于让任意生物拥有攻击后施法技能的模板。
+这个模板可用于设置一个额外的魔法，这个额外的魔法仅在目标生物拥有某个魔法状态时才会施放（类似于深渊号角中的女巫）。
+所有的设置均在 游戏根目录\Mods\Ranged Spell Casting Template\Data\s\0 spell after attack - creature.erm中。
+
+要创建新的攻击后施法技能方案的话，只需要在0 spell after attack - creature.erm中设置你想要的数值即可。
+
+要创建2个以上的攻击后施法技能方案时，需要你将0 spell after attack - creature.erm复制在同一个路径中，并把“0”换成其他数字。在新脚本中也要搜索替换所有的“0_”为“其他数字_”（在文本编辑器中按“Ctrl+H”）。

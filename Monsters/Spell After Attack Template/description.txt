@@ -1,0 +1,12 @@
+Spell After Attack Template
+
+Author: Archer30
+
+
+Spell After Attack template for creating your unique Casting Spell after attack ability. 
+It is possible to set an alternative spell with the template which would be casted only when the attacked creature is processed with another spell (similar to Sorceress in HotA).
+All the settings are in ...Mods\Spell After Attack Template\\Data\s\0 spell after attack - creature.erm.
+
+In order to set up Spell After Attack for a creature, simply modify the settings in 0 spell after attack - creature.erm to the values you like. 
+
+The second or more Spell After Attack abilities needs to be created by copying 0 spell after attack - creature.erm to the same location and rename "0" to another number. Also replace all the "0_" with "[custom number]_" in the new script (by pressing "Ctrl+H" from the text editor).

@@ -1,0 +1,61 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Set up a creature to cast a spell after attack. 
+; The attacking creature would try to cast the "initial spell" upon attacking.
+; If the attacked target has the buff of the initial spell, an alternative spell could be casted depending on settings..
+
+
+; ============== SETTINGS ==============
+!#VRi^0_atkspell_triggerMon^:S(MON_ARCHER);         [Creature that has this ability]
+!#VRi^0_atkspell_actionMode^:S2;                    [Action for triggering the spell. 0 - Melee, 1 - Ranged, 2 - Melee & Ranged]
+!#VRi^0_atkspell_chance^:S100;                      [Chance of casting a initial spell]
+
+!#VRi^0_atkspell_initSpell^:S(SPELL_WEAKNESS);      [Initial spell the creature would cast upon attacking]
+!#VRi^0_atkspell_initSpellLevel^:S(SKILL_ADVANCED); [Skill level of the initial spell]
+!#VRi^0_atkspell_initSpellPower^:S3;                [Power of the initial spell]
+
+!#VRi^0_atkspell_altSpell_on^:S(TRUE);              [Switch for casting the alternative spell when the attacked target has the buff of the initial spell]
+!#VRi^0_atkspell_altSpell_repeatable^:S(TRUE);      [Switch for whether the alternative spell is allowed to cast even if the target is buffed (usually enabled for Disrupting Ray)]
+!#VRi^0_atkspell_altSpell^:S(SPELL_DISRUPTING_RAY); [Alternative spell is only casted when the debuff of the initial spell is applied on the attacked target]
+!#VRi^0_atkspell_altSpellLevel^:S(SKILL_ADVANCED);  [Skill level of the alternative spell]
+!#VRi^0_atkspell_altSpellPower^:S3;                 [Power of the alternative spell]   
+; ============ END SETTINGS ============
+
+
+!?FU(atkspell_OnAfterShoot)&i^0_atkspell_actionMode^<>0;
+!#VA(atkStack:x) (defStack:x);
+
+!!FU(atkspell_0_CastAfterAttack):P(atkStack)/(defStack);
+
+!?FU(atkspell_OnAfterMelee)&i^0_atkspell_actionMode^<>1;
+!#VA(atkStack:x) (defStack:x);
+
+!!FU(atkspell_0_CastAfterAttack):P(atkStack)/(defStack);
+
+!?FU(atkspell_0_CastAfterAttack);
+!#VA(atkStack:x) (defStack:x);
+
+; Exit if not ideal creature or the attacked target is dead
+!!BM(atkStack):T?(mon:y);
+!!FU|(mon)<>i^0_atkspell_triggerMon^/(defStack)<=(NO_STACK):E;
+
+; Exit if no luck
+!!VR(random:y):T0/1/100;
+!!FU&i^0_atkspell_chance^<(random):E;
+
+!!BG:Q?(atkSide:y);
+; Check if the attacked target is buffed with the initial spell
+!!BM(defStack):P?(pos:y) Gi^0_atkspell_initSpell^/?(duration:y)/?(level:y);
+
+; Cast the initial spell if the target has no initial buff
+!!if&(duration)=0/i^0_atkspell_initSpell^>(NO_SPELL);
+  !!FU(atkspell_CheckStackImmunity):P(defStack)/i^0_atkspell_initSpell^/(atkSide)/?(result:y);
+  !!BMi^atkspell_stackAttacking^&(result):Ci^0_atkspell_initSpell^/(pos)/i^0_atkspell_initSpellLevel^/i^0_atkspell_initSpellPower^/1;
+; Cast the alternative spell if the target is buffed
+!!el&i^0_atkspell_altSpell_on^/i^0_atkspell_altSpell^>(NO_SPELL);
+  !!FU(atkspell_CheckStackImmunity):P(defStack)/i^0_atkspell_altSpell^/(atkSide)/?(result);
+  !!BMi^atkspell_stackAttacking^&(result):Ci^0_atkspell_altSpell^/(pos)/i^0_atkspell_altSpellLevel^/i^0_atkspell_altSpellPower^/1;
+!!en;
