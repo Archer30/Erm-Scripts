@@ -1,0 +1,37 @@
+ZVSE2
+; Author:   Hawaiing and Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Function to change the model of a stack. Requires ert to work.
+
+
+!?FU(model_BattleStack_ChangeModel);
+!#VA(stack:x);                          [Stack ID (0..41)]
+!#VA(value:x);                          [Monster ID or ert index number. The mode is determined by the value here. If the number is greater than 100000, it's an ert index, otherwise it's an monster ID.]
+
+!!VR(mode):S0;
+!!VR(mode)&(value)>=100000:S1;          [100000 - min ert index numher]
+
+
+; If the value is a monster ID
+!!if&(mode)=0;
+  !!UN:C4697553/4/?y1;
+  !!VRy2:S(value) *116 +y1 +12;
+  !!UN:Cy2/4/?(value);
+  !!BM(stack):G-70/(value)/d;
+!!en;
+
+!!BM(stack):G-13/?y11/d;
+!!SN:E5622208/2/(value);
+!!BM(stack):G-13/v1/d;                  [Reset off_356]
+!!UN:Cy11/4/?y13;                       [Restore off_356]
+!!VRy13:+4;
+!!UN:Cy13/4/?y14;
+!!SN:Ey14/2/y11;
+
+; If the value is an ert index
+!!if&(mode)=1;
+  !!SN:E7824928/1/(value);
+  !!BM(value):G-70/v1/d;
+!!en;

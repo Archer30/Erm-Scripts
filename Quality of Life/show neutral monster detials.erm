@@ -1,0 +1,46 @@
+ZVSE2
+; Author:   daemon_n and Hawaiing
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Replace the original pop-up dialogue of neutral monsters with the monster detials dialogue.
+
+
+!?FU(OnStartOrLoad);
+!!SN:L^erm_hooker.era^/?(hooker:y);
+!!FU&(hooker)=0:E;
+
+!!SN:A(hooker)/^SetHook^/?(hookingFuncAddress:y);
+!!FU(arch_CreateERMHook):P(hookingFuncAddress);
+
+!?FU(arch_CreateERMHook);
+!#VA(address:x);
+
+!!SN:E(address)/1/4288741/(arch_OnADvMapMonRmc);
+
+!?FU(arch_OnADvMapMonRmc);
+!#VA(address:x);
+
+!!UN:C(address)/(STRUCT_HOOK_CONTEXT_EDI)/4/?(monId:y);
+!!FU(arch_ShowMonDlgRecruiting):P(monId:y)/1;
+!!SN:X?(var:y)/0;
+!!UN:C(address)/(STRUCT_HOOK_CONTEXT_RET)/4/4289385;
+  
+!?FU(arch_ShowMonDlgRecruiting);        [by Hawaiing]
+!#VA(mon:x) (isPopup:x);
+
+!!FU&(mon)<=(NO_MON):E;
+
+!!VR(value:y):S9990 *4 +8943204;
+!!VR(value2:y):S(isPopup)* -1 +1;       [Get negative value]
+!!SN:E6243760/2/(value)/(mon)/119/32/(value2);[Create the dialogue]
+!!SN:E6289408/2/(value)/-1/-1;
+!!UN:C7998936/4/(mon);                  [For stack Exp Panel]
+
+!!if&(isPopup);
+  !!SN:E6245264/2/(value);              [Popup]
+!!el;
+  !!SN:E6245280/2/(value);              [Normal]
+!!en;
+
+!!SN:E6244736/2/(value);                [Destroy the dialogue]

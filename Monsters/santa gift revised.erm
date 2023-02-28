@@ -1,0 +1,154 @@
+ZVSE2
+; Author:   Archer30
+; Idea:     Dalion
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; if hero wins a battle having at least 1 stack of Santas in army, there are 3 types of reward: 
+; 60% chance of random resource (mithril included), 30% chance of random artifact of treasure-minor tiers, and 10% chance of teaching random spell hero doesn't know yet.
+
+
+; ============== SETTINGS ==============
+; String
+!#VRs^santGift_Msg^:S^Santa Gremlin has a gift for you.^;
+; Gift chance
+!#VRi^santGift_giftChance^:S30;         [Chance for getting a gift after winning a battle. Value from 0 to 100]
+!#VRi^santGift_resRatio^:S60;           [Ratio of getting resournces]
+!#VRi^santGift_artRatio^:S30;           [Ratio of getting an artifact]
+!#VRi^santGift_spellRatio^:S10;         [Ratio of learning a new spell]
+; Resources
+!#VRi^santGift_randResMin^:S1;          [Minimun number of resources]
+!#VRi^santGift_randResMax^:S3;          [Maximum number of resources]
+!#VRi^santGift_randResGoldMult^:S200;   [Multiplier for gold]
+; Artifact
+!#VRi^santGift_treasureArtRatio^:S3;    [Ratio of getting a treasure level artifact (if the reward is artifact)]
+!#VRi^santGift_minorArtRatio^:S1;       [Ratio of getting a minor level artifact (if the reward is artifact)]
+; ============ END SETTINGS ============
+
+
+!?FU(OnAfterBattleUniversal);
+; Check if the attacking hero is the winner (one with owner)
+!!HEi^battle_hero_0^:O?(owner:y);
+
+!!if&(owner)>(NO_OWNER);
+  !!VR(hero:y):Si^battle_hero_0^;
+  !!VR(hasSanta:y):S(FALSE);
+
+  ; Check if there is a Santa Gremlin in the hero's army
+  !!re (slot:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!HE(hero):C0/(slot)/?(type:y)/?(num:y);
+
+    !!if&(type)=(MON_SANTA_GREMLIN)/(num)>0;
+      !!VR(hasSanta):S(TRUE);
+
+      !!br;
+    !!en;
+  !!en;
+
+  ; If Santa found, check if it is lucky enough to grant a gift 
+  !!if&(slot)<=(ARMY_SLOT_LAST);
+    !!VR(random:y):R0/0/99;
+
+    !!if&(random)<i^santGift_giftChance^;
+      ; Initialise picType variable (for it to be checked if a reward was given later)
+      !!VR(picType:y):S(NO_PIC_TYPE);
+      ; check the random number and see which reward to give
+      !!VR(totalRewardRatio:y):Si^santGift_resRatio^ +i^santGift_artRatio^ +i^santGift_spellRatio^;
+      !!VR(sumRatio:y):Si^santGift_resRatio^ +i^santGift_artRatio^;
+      !!VR(rewardType:y):R0/0/(totalRewardRatio);
+
+      ; Reward: Random resources
+      !!if&(rewardType)<i^santGift_resRatio^;
+        ; Check if Mithril is enabled
+        !!VR(lastResId:y):S(RES_GOLD);
+        !!UN:P36/?(mithrilEnabled:y);
+        !!VR(lastResId)&(mithrilEnabled):S(RES_MITHRIL);
+
+        ; Get the random resources type and number
+        !!VR(resType:y):R0/(RES_FIRST)/(lastResId);
+        !!VR(resNum:y):R0/i^santGift_randResMin^/i^santGift_randResMax^;
+        !!VR(resNum)&(resType)=(RES_GOLD):*i^santGift_randResGoldMult^;
+
+        ; Give the resource
+        !!OW:R(owner)/(resType)/d(resNum);
+
+        ; Set up message for human player
+        !!if&i^timerIsHuman^;
+          !!VR(picType):S(resType);
+          !!VR(picSubtype:y):S(resNum);
+        !!en;
+
+      ; Reward: Random artifact
+      !!el&(rewardType)>=i^santGift_resRatio^/(rewardType)<(sumRatio);
+        ; Check which tier of artifact to give
+        !!VR(totalArtRatio:y):Si^santGift_treasureArtRatio^ +i^santGift_minorArtRatio^;
+        !!VR(random):R0/0/(totalArtRatio);
+
+        !!if&(random)<i^santGift_treasureArtRatio^;
+          !!VR(artLevel:y):S(ART_LEVEL_TREASURE);
+        !!el;
+          !!VR(artLevel):S(ART_LEVEL_MINOR);
+        !!en;
+
+        ; Get and give the artifact
+        !!UN:J6/(artLevel)/?(art:y);
+        !!HE(hero):A4/(art);
+
+        ; Set up message for human player
+        !!if&i^timerIsHuman^;
+          !!VR(picType):S(PIC_TYPE_ART);
+          !!VR(picSubtype):S(art);
+        !!en;
+
+      ; Reward: Teach a spell
+      !!el;
+        ; Check if the hero owns a spell book
+        ; Note: If the hero does not have a spell book, he won't get a reward this time
+        !!HE(hero):A2/(ART_META_SPELLBOOK)/?(backpacked:y)/?(equipped:y);
+
+        !!if&(equipped)>0;
+          ; Get the ready-to-learn spell of the hero
+          !!FU(NewIntArray):P?(readyToLearnSpells:y);
+          !!HE(hero):S(SKILL_WISDOM)/?(wisdomLevel:y);
+          !!VR(availSpellLevel:y):S2 +(wisdomLevel);
+
+          ; Loop through all the spells and get all the spells that is not learned by the hero and also the hero can learn (with enough Wisdom)
+          !!re (spell:y)/(SPELL_FIRST)/(SPELL_LAST_WOG);
+            !!SS:L(spell)/?(spellLevel:y);
+
+            !!if&(availSpellLevel)>=(spellLevel);
+              !!HE(hero):M=(spell)/1;
+
+              !!FU(Array_Push)&1:P(readyToLearnSpells)/(spell);
+            !!en;
+          !!en;
+
+          ; If there is at least one spell the hero can learn, get a random spell from the can-learn list
+          ; Note: If the hero has learned all the spells, he won't get a reward this time
+          !!SN:M(readyToLearnSpells)/?(size:y);
+
+          !!if&(size)>0;
+            !!VR(index:y):R0/1/(size) -1;
+            !!SN:M(readyToLearnSpells)/(index)/?(randSpell:y);
+
+            ; Teach the spell
+            !!HE(hero):M(randSpell)/1;
+
+            ; Set up message for human player
+            !!if&i^timerIsHuman^;
+              !!VR(picType):S(PIC_TYPE_SPELL);
+              !!VR(picSubtype):S(randSpell);
+            !!en;
+          !!en;
+        !!en;
+      !!en;
+
+      ; Show message for human player
+      !!if&(picType)>(NO_PIC_TYPE);
+        !!IF:Q1/(PIC_TYPE_MONSTER)/(MON_SANTA_GREMLIN)/(picType)/(picSubtype)/(MSG_TYPE_MES)/s^santGift_Msg^;
+
+        !!SN:D;
+      !!en;
+    !!en;
+  !!en;
+!!en;

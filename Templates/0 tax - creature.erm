@@ -8,24 +8,67 @@ ZVSE2
 
 ; ============== SETTINGS ==============
 !#VRi^0_tax_mon^:S(MON_PEASANT);        [creature that pays tax]
-!#VRi^0_tax_amount^:S1;                 [amount of gold generates from every unit/day]
+!#VRi^0_tax_amount^:S1;                 [amount of gold generates every unit/day]
 ; ============ END SETTINGS ============
 
 
-!?FU(OnEveryDay)&i^timerOnce^;
+!?FU(OnEveryDay);
+; Check for heroes
 !!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  ; Skip if not the current player's hero
   !!HEi:O?(owner:y);
-  !!co&(owner)<=(NO_PLAYER);
+  !!co&(owner)<>i^timerOwner^;
 
-  ; If the hero belongs to a player, look for the tax payers
+  ; Look for the tax payers
   !!re (slot:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
     !!HEi:C0/(slot)/?(mon:y)/?(qty:y);
     !!co&(mon)<>i^0_tax_mon^;
 
-    ; Found tax payers. Caculate the amount of tax and add to the owner
-    !!VR(bonusGold:y):S(qty) *i^0_tax_amount^;
-    !!OW:R(owner)/(RES_GOLD)/d(bonusGold);
+    ; Calculate the amount of tax and add to the owner
+    !!VR(bonusGoldHero:y):S(qty) *i^0_tax_amount^;
   !!en;
 !!en;
+
+; Check for towns
+!!re i;
+  !!UN:U(OBJ_TOWN)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  ; Skip if not the current player's town
+  !!CA(x)/(y)/(z):O?(owner);
+  !!co&(owner)<>i^timerOwner^;
+
+  ; Look for tax payers
+  !!re (slot)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!CA(x)/(y)/(z):M2/(slot)/?(mon)/?(qty);
+    !!co&(mon)<>i^0_tax_mon^;
+
+    ; Calculate the amount of tax and add to the owner
+    !!VR(bonusGoldTown):S(qty) *i^0_tax_amount^;
+  !!en;
+!!en;
+
+; Check for garrisons
+!!re i;
+  !!UN:U(OBJ_GARRISON)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  ; Skip if not the current player's garrison
+  !!GR(x)/(y)/(z):O?(owner);
+  !!co&(owner)<>i^timerOwner^;
+
+  ; Look for tax payers
+  !!re (slot)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!GR(x)/(y)/(z):G/(slot)/?(mon)/?(qty);
+    !!co&(mon)<>i^0_tax_mon^;
+
+    ; Calculate the amount of tax and add to the owner
+    !!VR(bonusGoldGarrison):S(qty) *i^0_tax_amount^;
+  !!en;
+!!en;
+
+!!OW:Ri^timerOwner^/(RES_GOLD)/?(gold:y);
+!!VR(gold):+(bonusGoldHero) +(bonusGoldTown) +(bonusGoldGarrison);
+!!OW:Ri^timerOwner^/(RES_GOLD)/(gold);
 
 !!UN:R2;

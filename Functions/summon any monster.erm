@@ -12,14 +12,13 @@ ZVSE2
 !!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbMgr:y);
 !!UN:C(cmbMgr)/78528/(UNC_INT)/?(origActiveSide:y) C(cmbMgr)/78528/(UNC_INT)/(side);
 
-!!VR(summonedMonOffset:y):S78504;
-!!VR(summonedMonOffset)&(side)=(BATTLE_RIGHT):+4;
+!!VR(summonedMonOffset:y)&(side) *(UNC_INT) +78504;
 !!UN:C(cmbMgr)/(summonedMonOffset)/(UNC_INT)/?(origSummonedMon:y);
 
 !!SS(SPELL_EARTH_ELEMENTAL):E0/?(origEff:y) E0/1;
 
 !!re i/0/(numberStack)/1/-1;
-  !!SN:P^SumnElm^;
+  *!SN&i^battle_isVisible^:P^SumnElm^;
   !!SN:E5927824/(CALLCONV_THISCALL)/(cmbMgr)/(SPELL_EARTH_ELEMENTAL)/(monType)/(monAmount)/0;
 !!en;
 

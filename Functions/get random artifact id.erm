@@ -1,0 +1,58 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Function for getting artifacts of different levels
+; A better way than UN:J6 as it includes new artifacts supported by Emerald
+; Warning: This must be executed sooner than setting up object replacements on PI
+; Create artifact arrays of all the levels
+
+
+!?FU(OnAfterErmInstructions);
+!!FU(GetMaxArtifactId):P?(lastArt:y);
+
+!!re (index:y)/1/4;
+  !!VR(artLevel:y):S1 Sd<<(index);
+  ; Create the array
+  !!FU(NewIntArray):P?i^art_artifactArray_%(artLevel)^/(M_TEMP);
+
+  !!FU(art_FillInArtArrays):P(lastArt)/(artLevel);
+!!en;
+
+; Fiil in the array upon loading
+!?FU(OnAfterLoadGame);
+!!FU(GetMaxArtifactId):P?(lastArt:y);
+
+!!re (index:y)/1/4;
+  !!VR(artLevel:y):S1 Sd<<(index);
+  ; Remove all the elements from the array
+  !!SN:Mi^art_artifactArray_%(artLevel)^/0;
+
+  !!FU(art_FillInArtArrays):P(lastArt)/(artLevel);
+!!en;
+
+!?FU(art_FillInArtArrays);
+!#VA(lastArt:x) (artLevel:x);
+
+!!re i/(ART_CENTAUR_AXE)/(lastArt);
+
+  !!if&i<>(ART_HIGHLIGHTED_SLOT)/i<>(ART_ARTIFACT_LOCK);
+    !!UN:Ai/?(isDisabled:y) Ai/3/?(level:y) Ai/4/?(combiId:y);
+
+    *!IF&i>170:M^%i %(isDisabled) %(level) %(combiId)^;
+    !!if&(isDisabled)<>(TRUE)/(combiId)=(NO_ART)/(level)=(artLevel);
+      !!FU(Array_Push):Pi^art_artifactArray_%(artLevel)^/i;
+    !!en;
+  !!en;
+!!en;
+
+; The action function for getting a random artifact ID with artifact level
+!?FU(art_GetRandomArtifactId);
+!#VA(artLevel:x);                       [level of the artifact]
+!#VA(artifact:x);                       [returned artifact ID]
+
+!!SN:Mi^art_artifactArray_%(artLevel)^/?(size:y);
+!!VR(size):-1;
+!!VR(index:y):R0/0/(size);
+!!SN:Mi^art_artifactArray_%(artLevel)^/(index)/?(artifact);
