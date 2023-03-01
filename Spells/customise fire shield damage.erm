@@ -1,0 +1,42 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, WoG Scripts
+
+; Customise the damage of Fire Shield for specific creatures
+
+
+!?FU(fireShld_GetFireShieldDamagePercent);
+!#VA(mon:x);                            [Monster Id with Fire Shield]
+!#VA(percent:x);                        [Percentage of the Fire Shield damage of the monster. Default: 100]
+
+!!VR(percent):S100;
+
+; ========================== TESTING ==========================
+!!VR(percent)&(mon)=(MON_SACRED_PHOENIX):S200;
+; ======================== END TESTING ========================
+
+!?FU(OnMonsterPhysicalDamage);
+; Exit if not Fire Shield damage
+!!UN:C42149568/(UNC_INT)/?(dmgType:y);
+!!FU&(dmgType)<>4458589:E;
+
+; Get the owner of the Fire Shield
+!!MF:N?(victimStack:y);
+
+!!if&(victimStack)=i^battle_acting_stack^;
+  !!BG:E?(fireShieldStack:y);
+!!el;
+  !!VR(fireShieldStack):Si^battle_acting_stack^;
+!!en;
+
+; Change the fireshield damage for specific monster types
+!!BM(fireShieldStack):T?(type:y);
+
+!!FU(fireShld_GetFireShieldDamagePercent):P(type)/?(percent:y);
+
+!!if&(percent)<>100;
+  !!MF:D?(fireShieldDmg:y);
+  !!VR(fireShieldDmg):*(percent) :100;
+  !!MF:F(fireShieldDmg);
+!!en;
