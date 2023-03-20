@@ -1,0 +1,34 @@
+ZVSE2
+; Author:   daemon_n
+; Engine:   ERM 2.0+
+; Requires: ERA 3.9.3+, Era Erm Framework
+
+; Temporary fix for crashes on View World screen with 0 music volume. The script changes the volume to 1 and change back if the volume is 0.
+
+
+!?FU(OnStartOrLoad)&i^umt_randomizationIntervalDays^;
+!!SN:L^erm_hooker.era^/?(hooker:y);
+!!FU&(hooker)=0:E;
+
+!!SN:A(hooker)/^SetHook^/?(hookingFuncAddress:y);
+!!FU(umt_CreateERMHook):P(hookingFuncAddress);
+
+!?FU(umt_CreateERMHook);
+!#VA(address:x);
+
+!!SN:E(address)/1/6275904/(umt_OnOpenViewWorldScreen);
+!!SN:E(address)/1/6276482/(umt_OnCloseViewWorldScreen);
+
+!?FU(umt_OnOpenViewWorldScreen);
+!!UN:C6916016/(UNC_INT)/?i^umt_musicVol^;
+
+!!if&i^umt_musicVol^=0;
+  !!UN:C6916016/(UNC_INT)/1;
+  !!VRi^umt_musicVol^:S1;
+!!en;
+
+!?FU(umt_OnCloseViewWorldScreen)&i^umt_musicVol^>0;
+!!UN:C6916016/(UNC_INT)/0;
+!!UN:C(SOUND_MANAGER)/(UNC_INT)/?(soundMan:y);
+!!SN:E5874864/(CALLCONV_THISCALL)/(soundMan);
+!!VRi^umt_musicVol^:S0;

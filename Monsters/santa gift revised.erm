@@ -104,7 +104,7 @@ ZVSE2
       !!el;
         ; Check if the hero owns a spell book
         ; Note: If the hero does not have a spell book, he won't get a reward this time
-        !!HE(hero):A2/(ART_META_SPELLBOOK)/?(backpacked:y)/?(equipped:y);
+        !!HE(hero):A2/(ART_META_SPELLBOOK)/?(has:y)/?(equipped:y);
 
         !!if&(equipped)>0;
           ; Get the ready-to-learn spell of the hero

@@ -1,0 +1,68 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.9.3+, Era Erm Framework, WoG Scripts
+
+; Swtich between Breath Attack and Strike All Enemy Around if a stack has both by right-clicking on the defend icon
+
+
+; Check if there is any monster on the battlefield learns both Breath Attack and Strike All Around, store them in the array
+!?FU(OnSetupBattlefield_Quit);
+!!SN:Mi^breatall_stacksWithBreathAndStrikeAll^;
+
+!!FU(NewIntArray):P42/?i^breatall_stacksWithBreathAndStrikeAll^/(M_TEMP);
+
+!!re i/(BATTLE_STACK_FIRST)/(BATTLE_STACK_LAST);
+  !!BMi:T?(type:y) N?(num:y);
+
+  !!if&(type)>(NO_MON)/(type)<>(MON_ARROW_TOWERS)/(num)>0;
+    !!BMi:F?(monFlags:y);
+
+    !!VR(hasBreath:y):S(monFlags) &(MON_FLAG_WIDE_ATTACK);
+    !!VR(hasStrikeAll:y):S(monFlags) &(MON_FLAG_ATTACKS_ALL_AROUND);
+
+    !!SN&(hasBreath)/(hasStrikeAll):Mi^breatall_stacksWithBreathAndStrikeAll^/i/(TRUE);
+  !!en;
+!!en;
+
+; Check if the current stack learns both Breath Attack and Strike All Around when right-clicking on 
+!?FU(OnBattleScreenMouseClick)&i^mouse_item^=2010/i^mouse_action^=(MOUSE_RMB_PRESSED)/999;
+!!SN:Mi^breatall_stacksWithBreathAndStrikeAll^/i^battle_current_stack^/?(hasBoth:y);
+
+!!if&(hasBoth);
+  !!BMi^battle_current_stack^:F?(monFlags:y);
+
+  !!VR(hasBreath:y):S(monFlags) &(MON_FLAG_WIDE_ATTACK);
+
+  !!if&(hasBreath);
+    !!VR(hasStrikeAll:y):S(monFlags) &(MON_FLAG_ATTACKS_ALL_AROUND);
+    !!BMi^battle_current_stack^:T?(type:y) N?(num:y);
+    !!VR(isPlural:y):S(num) B;
+    !!SN:H^monname^/(type)/(isPlural)/?(monName:z);
+
+    !!if&(hasStrikeAll);
+      !!BMi^battle_current_stack^:Fd~(MON_FLAG_ATTACKS_ALL_AROUND);
+    !!el;
+      !!BMi^battle_current_stack^:Fd|(MON_FLAG_ATTACKS_ALL_AROUND);
+    !!en;
+
+    *!SN:T^breatall.getBreath^/?(msg:z)/^mon^/(monName);
+    *!IF:L^%(msg)^;
+
+    ; Multiple players support
+    !!if&i^battle_humanOnly^;
+      !!VR(oppSide:y):Si^battle_current_side^ X(TRUE);
+      !!IP:D(oppSide);
+      !!FU(breatall_ChangeStackFlag_remote):Di^battle_current_stack^/(hasStrikeAll);
+    !!en;
+  !!en;
+!!en;
+
+!?FU(breatall_ChangeStackFlag_remote);
+!#VA(stack:x) (hasStrikeAll:x);
+
+!!if&(hasStrikeAll);
+  !!BM(stack):Fd~(MON_FLAG_ATTACKS_ALL_AROUND);
+!!el;
+  !!BM(stack):Fd|(MON_FLAG_ATTACKS_ALL_AROUND);
+!!en;
