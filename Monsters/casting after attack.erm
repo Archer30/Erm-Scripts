@@ -1,0 +1,811 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, Third Upgrade Mod
+
+; A script for creating your own abilities of casting after attacks
+
+; Create your own casting after attack abilities with this script:
+; There are three types of triggers: FU(casts_OnAfterMelee), FU(casts_OnAfterShoot) and FU(casts_OnAfterAttack) here, define your creature for casting with the trigger you need
+
+; Use FU(casts_CastSpellAfterAttack) for general spells. Here are the explanation of each paramter of this funciton:
+; x1 - attacking stack (the stack casting the spell)
+; x2 - defending stack (the stack receivinig the spell)
+; x3 - Chance to cast the spell (value from 0 ~ 100)
+; x4 - The spell ID. Check for them in erm help
+; x5 - Power coefficient. This has different meaning for spells giving a buff and spell damaging:
+; For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient
+; Note that in Third Upgrade Mod, thanks to Majaczek, this does not work properly. You have to define the spell power in cfg instead of here
+; x6 - optional parameter. We need this only for lightning spells as we need to prevent the target to retaliate when lightning takes effect
+
+; Use FU(casts_CastSpecialPoison) for casting a combination of venoms. Here are the explanation of each parameter of the funciton:
+; x1 - attacking stack (the stack casting the spell)
+; x2 - defending stack (the stack receivinig the spell)
+; x3 - whether to cancel retaliation if triggered
+; x4 - chance to trigger
+; x5 ~ x16 - Spell to cast. Can be defined with max of 12 spells. 
+
+
+; ========================== SETTINGS ==========================
+!#VRs^casts_stun_BattleLog_0^:S^ loses the chance to retaliate!^;
+!#VRs^casts_stun_BattleLog_1^:S^ lose the chance to retaliate!^;
+; ======================== END SETTINGS ========================
+
+
+****************************************************************************************************
+**************************************SPELL AFTER MELEE ATTACK**************************************
+****************************************************************************************************
+!?FU(casts_OnAfterMelee);
+!#VA(atkStack:x) (defStack:x);
+
+!!BM(atkStack):T?(type:y);
+
+; Define creatures' spell after attack (melee) here
+
+!!if|(type)=206;               Legendary Unicorn
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/20/(SPELL_BLIND)/3/?(result:y);
+  !!FU(casts_CancelRetaliation)&(result):P(atkStack)/(defStack);                       [Function to No Retal the target when the spell is successfully casts]
+
+!!el|(type)=(MON_GIANT);
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/10/(SPELL_LIGHTNING_BOLT)/30/?(result:y);
+  !!FU(casts_CancelRetaliation)&(result):P(atkStack)/(defStack);                       [Function to No Retal the target when the spell is successfully casts]
+
+!!el|(type)=218;               Efreet Raja
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/5/(SPELL_INFERNO)/40/?(result:y);
+  !!FU(casts_CancelRetaliation)&(result):P(atkStack)/(defStack);                       [Function to No Retal the target when the spell is successfully casts]
+
+!!el|(type)=(MON_ARCH_DEVIL);                       
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/5/(SPELL_BERSERK)/3/?(result:y);
+  !!FU(casts_CancelRetaliation)&(result):P(atkStack)/(defStack);                       [Function to No Retal the target when the spell is successfully casts]
+
+!!el|(type)=(MON_HELL_BARON);                       
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/10/(SPELL_BERSERK)/3/?(result:y);
+  !!FU(casts_CancelRetaliation)&(result):P(atkStack)/(defStack);                       [Function to No Retal the target when the spell is successfully casts]
+
+ !!el|(type)=219;              Antichrist        
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/20/(SPELL_BERSERK)/3/?(result:y);
+  !!FU(casts_CancelRetaliation)&(result):P(atkStack)/(defStack);                       [Function to No Retal the target when the spell is successfully casts]
+
+!!el|(type)=(MON_VAMPIRE_LORD);                     
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/20/(SPELL_BLIND)/3/?(result:y);
+  !!FU(casts_CancelRetaliation)&(result):P(atkStack)/(defStack);                       [Function to No Retal the target when the spell is successfully casts]
+
+!!el|(type)=221;              Nosferatu                  
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/20/(SPELL_BLIND)/3/?(result1:y);
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/5/(SPELL_HYPNOTIZE)/3/?(result2:y);
+  !!FU(casts_CancelRetaliation)|(result1)/(result2):P(atkStack)/(defStack);
+  
+!!el|(type)=(MON_DARKNESS_DRAGON)/(type)=231;
+  !!FU(casts_CastMadnessOfTheAbyss):P(atkStack)/(defStack)/20/(FALSE)/50; [The chance to cast for FU(casts_CastMadnessOfTheAbyss) would be the value for each spell instead of the total]
+
+****************************************************************************************************
+******************************************SPECIAL POISONS*******************************************
+****************************************************************************************************
+
+!!el|(type)=(MON_GREEN_DRAGON);
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/20/71/80;
+
+!!el|(type)=(MON_GOLD_DRAGON);
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/30/(SPELL_WEAKNESS);
+
+!!el|(type)=215;                        Bane of Souls
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(TRUE)/20/71/(SPELL_SLOW)/73;
+
+!!el|(type)=(MON_DEMON);                        
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/20/73;
+
+!!el|(type)=(MON_HORNED_DEMON);                        
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/20/73/(SPELL_DISRUPTING_RAY);
+
+!!el|(type)=216;      Infernal Slayer                  
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/20/73/(SPELL_DISRUPTING_RAY);
+
+!!el|(type)=329;      Plague Zombie                  
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/20/73/(SPELL_WEAKNESS)/(SPELL_CURSE)/(SPELL_SLOW);
+
+!!el|(type)=(MON_WIGHT);                       
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(TRUE)/10/74;
+
+!!el|(type)=(MON_WRAITH);                       
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(TRUE)/20/74;
+
+!!el|(type)=261;      Banshee                 
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(TRUE)/20/74/75;
+
+!!el|(type)=(MON_BLACK_KNIGHT);
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/30/(SPELL_SORROW);
+
+!!el|(type)=(MON_DREAD_KNIGHT);
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/30/(SPELL_SORROW);
+
+!!el|(type)=223;      Death Knight
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/30/(SPELL_SORROW);
+
+!!el|(type)=(MON_BONE_DRAGON);      
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/50/(SPELL_SORROW);
+
+!!el|(type)=(MON_GHOST_DRAGON);      
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/50/(SPELL_SORROW);
+
+!!el|(type)=(MON_BLOOD_DRAGON);      
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/50/(SPELL_SORROW);
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/20/75;
+
+!!el|(type)=224;      Deathbringer Dragon
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/50/(SPELL_SORROW);
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/20/75;
+
+!!el|(type)=(MON_TROGLODYTE);      
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/10/71;
+
+!!el|(type)=(MON_INFERNAL_TROGLODYTE);      
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/10/71/(SPELL_WEAKNESS);
+
+!!el|(type)=225;     Mushroom Shaman 
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/10/71/(SPELL_WEAKNESS)/(SPELL_CURSE);
+
+ !!el|(type)=(MON_HARPY_HAG);    
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(FALSE)/5/75;
+
+!!el|(type)=227;    Wings of Madness
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(TRUE)/10/75/(SPELL_BERSERK);
+
+!!el|(type)=(MON_SCORPICORE);
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(TRUE)/20/71/74/80;
+
+!!el|(type)=230;                        [Chimera]
+  !!FU(casts_CastSpecialPoison):P(atkStack)/(defStack)/(TRUE)/30/71/74/80/(SPELL_SLOW)/78;
+!!en;
+
+****************************************************************************************************
+**************************************SPELL AFTER RANGED ATTACK*************************************
+****************************************************************************************************
+; Works for non-AOE shooters (a.k.a not Magog or Lich)
+!?FU(casts_OnAfterShoot);
+!#VA(atkStack:x) (defStack:x);
+
+!!BM(atkStack):T?(type:y);
+
+; Define creatures' spell after attack (ranged) here
+!!if|(type)=(MON_MAGE);
+  !!FU(casts_CastMageSpells):P(atkStack)/(defStack)/(FALSE)/(FALSE)/(FALSE);
+
+!!el|(type)=(MON_ARCH_MAGE);
+  !!FU(casts_CastArchMageSpells):P(atkStack)/(defStack)/(FALSE)/(FALSE)/(FALSE);
+
+!!el|(type)=257;                        [Supreme Arch Mage]
+  !!FU(casts_CastSupremeArchMageSpells):P(atkStack)/(defStack)/(FALSE)/(FALSE)/(FALSE);
+
+!!el|(type)=(MON_GOG);                      
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/10/(SPELL_FIREBALL)/10/?(result1:y);
+
+!!el|(type)=(MON_MAGOG);                       
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/30/(SPELL_FIREBALL)/10/?(result1:y);
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/10/(SPELL_FIRE_WALL)/10/?(result2:y);
+
+!!el|(type)=272;           Succubus           
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/20/(SPELL_FORGETFULNESS)/10/?(result1:y);
+
+!!el|(type)=281;           Lilim          
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/40/(SPELL_FORGETFULNESS)/10/?(result1:y);
+
+; Works for AOE shooters, like Magog or Lich
+!?FU(OnBattleActionEnd);
+!!BG:A?(action:y);
+!!FU&(action)<>(BATTLE_ACTION_SHOOT):E;
+
+!!BG:N?(atkStack:y) E?(defStack:y);
+!!FU&(defStack)=(NO_STACK):E;
+
+!!BM(atkStack):T?(type:y);
+
+!!if|(type)=(MON_LICH);                        
+  !!FU(casts_CastLichSpells):P(atkStack)/(defStack)/(FALSE)/(FALSE)/3;
+
+!!el|(type)=(MON_POWER_LICH);                        
+  !!FU(casts_CastPowerLichSpells):P(atkStack)/(defStack)/(FALSE)/(FALSE)/3;
+
+!!el|(type)=222;          Lich King                
+  !!FU(casts_CastLichKingSpells):P(atkStack)/(defStack)/(FALSE)/(FALSE)/3;
+!!en;
+    
+****************************************************************************************************
+*******************************SPELL AFTER BOTH MELEE AND RANGE ATTACK******************************
+****************************************************************************************************
+!?FU(casts_OnAfterAttack);
+!#VA(atkStack:x) (defStack:x);
+
+!!BM(atkStack):T?(type:y);
+
+; Define creatures' spell after attack (both melee and ranged) here
+!!if|(type)=(MON_TITAN);                      
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/10/(SPELL_LIGHTNING_BOLT)/30/?(result1:y);
+  !!FU(casts_CancelRetaliation)|(result1):P(atkStack)/(defStack);
+
+!!el|(type)=(MON_LORD_OF_THUNDER);                      
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/10/(SPELL_CHAIN_LIGHTNING)/30/?(result1:y);
+  !!FU(casts_CancelRetaliation)|(result1):P(atkStack)/(defStack);
+
+!!el|(type)=212;                        [Guardian of Zeus]
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/20/(SPELL_CHAIN_LIGHTNING)/30/?(result1:y);
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/5/(SPELL_TITANS_LIGHTNING_BOLT)/60/?(result2:y);
+  !!FU(casts_CancelRetaliation)|(result1)/(result2):P(atkStack)/(defStack);
+
+!!el|(type)=214;      Infernal Magog                 
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/50/(SPELL_FIREBALL)/20/?(result1:y);
+  !!FU(casts_CastSpellAfterAttack):P(atkStack)/(defStack)/20/(SPELL_FIRE_WALL)/20/?(result2:y);
+  !!FU(casts_CancelRetaliation)|(result1)/(result2):P(atkStack)/(defStack);
+ !!en;
+
+// Function to cast spell after attacks
+!?FU(casts_CastSpellAfterAttack);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+!!FU&(random)>=(chance):E;
+
+; Exit if the targeted stack cannot receive the spell
+!!if&(atkStack)<>(defStack);
+  !!BM(atkStack):I?(atkSide:y);
+
+  ; Exit if Alive for Poison
+  !!if&(spell)=71;
+    !!BM(defStack):F?(flags:y);
+    !!VR(isAlive:y):S(flags) &(MON_FLAG_ALIVE);
+    !!FU&(isAlive)=(FALSE):E;
+  !!en;
+
+  !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+  !!FU&(canReceive)=(FALSE):E;
+!!en;
+
+; Set spell power depending on spell type
+!!SS(spell):F?(flags:y);
+!!VR(isDmgSpell:y):S(flags) &512 B;
+!!VR(isMindSpell:y):S(flags) &1024 B;
+
+; Cast the spell
+!!BM(defStack):P?(defPos:y);
+
+!!if&(isDmgSpell);
+  !!FU(casts_CastMonsterDamagingSpell):P(atkStack)/(spell)/(defPos)/(powerCoef);
+!!el;
+  ; Exit if the defending stack has been buffed with the same spell
+  !!BM(defStack):G(spell)/?(duration:y)/?(level:y);
+  !!FU&(duration)>0:E;
+
+  !!BM(atkStack):C(spell)/(defPos)/(SKILL_NOT_LEARNED)/(powerCoef)/(TRUE);
+  !!FU(casts_CancelRetaliation)&(isMindSpell):P(atkStack)/(defStack);
+!!en;
+
+!!VR(result):S(TRUE);
+
+// Function to check if a stack can receive a spell
+!?FU(casts_Battle_CanStackReceiveSpell);
+!#VA(stackId:x) (spellID:x) (castingSide:x) (result:x);
+
+!!BM(stackId):Z?(stack:y); I?(side:y);
+!!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbMgr:y);
+!!SN:E5914512/(CALLCONV_THISCALL)/(cmbMgr)/(spellID)/(castingSide)/(stack)/1/1; [can stack apply buff/debuff]
+!!VR(result):Sv1;
+
+// Function to cast a damaging spell
+!?FU(casts_CastMonsterDamagingSpell);
+!#VA(stack:x);                          [Stack ID to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(pos:x);                            [Position to cast the spell]
+!#VA(powerCoef:x);                      [Power coefficient. Spell damage = stack size * power coefficient]
+
+; Check if both the caster and the target is valid, exit if negative
+!!BM(stack):N?(num:y);
+!!FU&(num)<=0:E;
+!!BU:E(pos)/?(targetStack:y);
+!!FU&(targetStack)=(NO_STACK):E;
+
+; Store the original data of the spell and change
+!!SS(spell):E(SKILL_NOT_LEARNED)/?(origEffect:y) E(SKILL_NOT_LEARNED)/0;
+!!SS(spell):P?(origPower:y) P(powerCoef);
+
+; Cast the spell
+!!BM(stack):C(spell)/(pos)/(SKILL_NOT_LEARNED)/(num)/(FALSE); [The 5th parameter must be FALSE in order to get advanced Frost Position to work]
+
+; Restore the data of the spell
+!!SS(spell):E(SKILL_NOT_LEARNED)/(origEffect) P(origPower);
+
+// Stun a target (making it impossible to retaliate for a particular hit when lightning spell takes effect)
+!?FU(casts_CancelRetaliation);
+!#VA(atkStack:x) (defStack:x);
+
+!!if&i^battle_acting_stack^=(atkStack);
+  !!BM(defStack):N?(num:y) R?(retal:y);
+
+  !!if&(num)>0/(retal)>0;
+    !!VRi^casts_stun_stack^:S(defStack);
+    !!VRi^casts_stun_retal^:S(retal);
+    !!BM(defStack):R0;
+
+    !!if&i^battle_isVisible^;
+      !!BM(defStack):T?(type:y);
+      !!VR(isPlural:y):S(num) -1 B;
+      !!SN:H^monname^/(type)/(isPlural)/?z2;
+      !!VRz3:Sz2 +s^casts_stun_battleLog_%(isPlural)^;
+      !!MM:Sz3;
+    !!en;
+  !!en;
+!!en;
+
+!?FU(OnBattleActionEnd)&i^casts_stun_retal^>0;
+!!BMi^casts_stun_stack^:Ri^casts_stun_retal^;
+
+// Hook
+!?FU(OnStartOrLoad);
+!!SN:L^erm_hooker.era^/?(hooker:y);
+!!FU&(hooker)=0:E;
+
+!!SN:A(hooker)/^SetHook^/?(hookingFuncAddress:y);
+!!FU(casts_CreateERMHook):P(hookingFuncAddress);
+
+!?FU(casts_CreateERMHook);
+!#VA(address:x);
+
+!!SN:E(address)/1/4462998/(casts_HOOK_AfterAttackMainFunc); [Trigger after melee attack, before retaliation]
+!!SN:E(address)/1/4455129/(casts_HOOK_AfterAttackMainFunc); [Trigger after shooting]
+
+!?FU(casts_HOOK_AfterAttackMainFunc);
+!!SN:X?(hook:y);
+!!UN:C(hook)/0/(UNC_INT)/?(stackStrucktDefender:y);   
+!!UN:C(hook)/4/(UNC_INT)/?(stackStrucktAttacker:y);  
+!!BG:A?(typeAttack:y);
+!!VR(stackAttackerID:y):S(NO_STACK); 
+!!VR(stackDefenderID:y):S(NO_STACK); 
+
+!!if&(stackStrucktAttacker)<>(FALSE); 
+  !!UN:C(stackStrucktAttacker)/244/(UNC_INT)/?(attakerSide:y); 
+  !!UN:C(stackStrucktAttacker)/248/(UNC_INT)/?(attakerStackIdInSide:y);
+  !!VR(stackAttackerID):S(attakerSide) *(BATTLE_STACKS_PER_SIDE) +(attakerStackIdInSide); 
+!!en;
+
+!!if&(stackStrucktDefender)<>(FALSE);
+  !!UN:C(stackStrucktDefender)/244/(UNC_INT)/?(defenderSide:y);
+  !!UN:C(stackStrucktDefender)/248/(UNC_INT)/?(defenderStackIdInSide:y);
+  !!VR(stackDefenderID):S(defenderSide) *(BATTLE_STACKS_PER_SIDE) +(defenderStackIdInSide);
+!!en;
+
+!!FU(casts_OnAfterMelee)&(typeAttack)=(BATTLE_ACTION_WALK_AND_ATTACK):P(stackAttackerID)/(stackDefenderID);
+!!FU(casts_OnAfterShoot)&(typeAttack)=(BATTLE_ACTION_SHOOT):P(stackAttackerID)/(stackDefenderID);
+!!FU(casts_OnAfterAttack)|(typeAttack)=(BATTLE_ACTION_WALK_AND_ATTACK)/(typeAttack)=(BATTLE_ACTION_SHOOT):P(stackAttackerID)/(stackDefenderID);
+
+// Drakness Dragon Madnees of the Abyss
+!?FU(casts_CastMadnessOfTheAbyss);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell. The chance to cast for FU(casts_CastMadnessOfTheAbyss) would be the value for each spell instead of the total]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+!!FU(NewIntArray):P4/?(spellList:y);
+!!SN:V(spellList)/0/(SPELL_FIREBALL)/(SPELL_FIRE_WALL)/(SPELL_METEOR_SHOWER)/(SPELL_BERSERK);
+!!FU(Array_Shuffle):P(spellList);
+
+!!re i/0/3;
+  !!SN:M(spellList)/i/?(spell);
+
+  ; Exit if the targeted stack cannot receive the spell
+  !!if&(atkStack)<>(defStack);
+    !!BM(atkStack):I?(atkSide:y);
+    !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+    !!co&(canReceive)=(FALSE);
+  !!en;
+
+  ; Exit if the ranom number is not favoured
+  !!VR(random:y):R0/0/99;
+  !!co&(random)>=(chance);
+
+  ; Set spell power depending on spell type
+  !!SS(spell):F?(flags:y);
+  !!VR(isDmgSpell:y):S(flags) &512 B;
+
+  ; Get the power coefficient
+  !!if&(spell)=(SPELL_FIREBALL);
+    !!VR(powerCoef):S50;
+  !!el&(spell)=(SPELL_FIRE_WALL);
+    !!VR(powerCoef):S50;
+  !!el&(spell)=(SPELL_METEOR_SHOWER);
+    !!VR(powerCoef):S50;
+  !!el&(spell)=(SPELL_BERSERK);
+    !!VR(powerCoef):S3;
+  !!en;
+
+  ; Cast the spell
+  !!BM(defStack):P?(defPos:y);
+
+  !!if&(isDmgSpell);
+    !!FU(casts_CastMonsterDamagingSpell):P(atkStack)/(spell)/(defPos)/(powerCoef);
+    !!VR(result):S(TRUE);
+  !!el;
+    ; Exit if the defending stack has been buffed with the same spell
+    !!BM(defStack):G(spell)/?(duration:y)/?(level:y);
+    !!co&(duration)>0;
+
+    !!BM(atkStack):C(spell)/(defPos)/(SKILL_NOT_LEARNED)/(powerCoef)/(TRUE);
+    !!VR(result):S(TRUE);
+  !!en;
+
+  !!br&(result);
+!!en;
+
+// Mage
+!?FU(casts_CastMageSpells);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+
+; Check what spell it is by the random number
+!!if&(random)<15;
+  !!VR(spell):S(SPELL_MAGIC_ARROW);
+  !!VR(powerCoef):S10;
+!!el&(random)>=15/(random)<20;
+  !!VR(spell):S(SPELL_ICE_BOLT);
+  !!VR(powerCoef):S10;
+!!el;
+  !!FU:E;
+!!en;
+
+; Exit if the targeted stack cannot receive the spell
+!!if&(atkStack)<>(defStack);
+  !!BM(atkStack):I?(atkSide:y);
+
+  !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+  !!FU&(canReceive)=(FALSE):E;
+!!en;
+
+; Set spell power depending on spell type
+!!SS(spell):F?(flags:y);
+!!VR(isDmgSpell:y):S(flags) &512 B;
+!!VR(isMindSpell:y):S(flags) &1024 B;
+
+; Cast the spell
+!!BM(defStack):P?(defPos:y);
+!!FU(casts_CastMonsterDamagingSpell):P(atkStack)/(spell)/(defPos)/(powerCoef);
+
+!!VR(result):S(TRUE);
+
+// Arch Mage
+!?FU(casts_CastArchMageSpells);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+
+; Check what spell it is by the random number
+!!if&(random)<15;
+  !!VR(spell):S(SPELL_MAGIC_ARROW);
+  !!VR(powerCoef):S20;
+!!el&(random)>=15/(random)<20;
+  !!VR(spell):S(SPELL_ICE_BOLT);
+  !!VR(powerCoef):S20;
+!!el&(random)>=20/(random)<25;
+  !!VR(spell):S(SPELL_LIGHTNING_BOLT);
+  !!VR(powerCoef):S20;
+!!el;
+  !!FU:E;
+!!en;
+
+; Exit if the targeted stack cannot receive the spell
+!!if&(atkStack)<>(defStack);
+  !!BM(atkStack):I?(atkSide:y);
+
+  !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+  !!FU&(canReceive)=(FALSE):E;
+!!en;
+
+; Cast the spell
+!!BM(defStack):P?(defPos:y);
+!!FU(casts_CastMonsterDamagingSpell):P(atkStack)/(spell)/(defPos)/(powerCoef);
+
+!!VR(result):S(TRUE);
+
+// Supreme Arch Mage
+!?FU(casts_CastSupremeArchMageSpells);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+
+; Check what spell it is by the random number
+!!if&(random)<15;
+  !!VR(spell):S(SPELL_MAGIC_ARROW);
+  !!VR(powerCoef):S30;
+!!el&(random)>=15/(random)<20;
+  !!VR(spell):S(SPELL_ICE_BOLT);
+  !!VR(powerCoef):S30;
+!!el&(random)>=20/(random)<25;
+  !!VR(spell):S(SPELL_LIGHTNING_BOLT);
+  !!VR(powerCoef):S30;
+!!el&(random)>=25/(random)<30;
+  !!VR(spell):S(SPELL_FIREBALL);
+  !!VR(powerCoef):S30;
+!!el&(random)>=30/(random)<35;
+  !!VR(spell):S(SPELL_METEOR_SHOWER);
+  !!VR(powerCoef):S30;
+!!el;
+  !!FU:E;
+!!en;
+
+; Exit if the targeted stack cannot receive the spell
+!!if&(atkStack)<>(defStack);
+  !!BM(atkStack):I?(atkSide:y);
+
+  !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+  !!FU&(canReceive)=(FALSE):E;
+!!en;
+
+; Cast the spell
+!!BM(defStack):P?(defPos:y);
+!!FU(casts_CastMonsterDamagingSpell):P(atkStack)/(spell)/(defPos)/(powerCoef);
+
+!!VR(result):S(TRUE);
+
+************************************************LICH************************************************
+!?FU(casts_CastLichSpells);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+
+; Check what spell it is by the random number
+!!if&(random)<20;
+  !!VR(spell):S(SPELL_SORROW);
+!!el&(random)>=20/(random)<30;
+  !!VR(spell):S(SPELL_WEAKNESS);
+!!el&(random)>=30/(random)<40;
+  !!VR(spell):S(SPELL_CURSE);
+!!el&(random)>=40/(random)<50;
+  !!VR(spell):S71;
+!!el;
+  !!FU:E;
+!!en;
+
+; Exit if the targeted stack cannot receive the spell
+!!if&(atkStack)<>(defStack);
+  !!BM(atkStack):I?(atkSide:y);
+
+  !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+  !!FU&(canReceive)=(FALSE):E;
+!!en;
+
+; Exit if the defending stack has been buffed with the same spell
+!!BM(defStack):G(spell)/?(duration:y)/?(level:y);
+!!FU&(duration)>0:E;
+
+; Cast the spell
+!!BM(defStack):P?(defPos:y);
+!!BM(atkStack):C(spell)/(defPos)/(SKILL_NOT_LEARNED)/(powerCoef)/(TRUE);
+
+!!VR(result):S(TRUE);
+
+*******************************************POWER LICH***********************************************
+!?FU(casts_CastPowerLichSpells);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+
+; Check what spell it is by the random number
+!!if&(random)<40;
+  !!VR(spell):S(SPELL_SORROW);
+!!el&(random)>=40/(random)<60;
+  !!VR(spell):S(SPELL_WEAKNESS);
+!!el&(random)>=60/(random)<80;
+  !!VR(spell):S(SPELL_CURSE);
+!!el&(random)>=80/(random)<100;
+  !!VR(spell):S71;
+!!el;
+  !!FU:E;
+!!en;
+
+; Exit if the targeted stack cannot receive the spell
+!!if&(atkStack)<>(defStack);
+  !!BM(atkStack):I?(atkSide:y);
+
+  !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+  !!FU&(canReceive)=(FALSE):E;
+!!en;
+
+; Exit if the defending stack has been buffed with the same spell
+!!BM(defStack):G(spell)/?(duration:y)/?(level:y);
+!!FU&(duration)>0:E;
+
+; Cast the spell
+!!BM(defStack):P?(defPos:y);
+!!BM(atkStack):C(spell)/(defPos)/(SKILL_NOT_LEARNED)/(powerCoef)/(TRUE);
+
+!!VR(result):S(TRUE);
+
+*******************************************LICH KING************************************************
+!?FU(casts_CastLichKingSpells);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(chance:x);                         [Chance to cast the spell]
+!#VA(spell:x);                          [Spell for casting]
+!#VA(powerCoef:x);                      [For damaging spell: Spell damage = stack size * power coefficient. For non-damaging spell: Buff duration = power coefficient]
+!#VA(result:x);                         [Optional. Return whether the spell has been casted sucessfully]
+
+!!VR(result):S(FALSE);
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+
+; Check what spell it is by the random number
+!!if&(random)<40;
+  !!VR(spell):S(SPELL_SORROW);
+!!el&(random)>=40/(random)<60;
+  !!VR(spell):S(SPELL_WEAKNESS);
+!!el&(random)>=60/(random)<80;
+  !!VR(spell):S(SPELL_CURSE);
+!!el&(random)>=80/(random)<90;
+  !!VR(spell):S71;
+!!el&(random)>=90/(random)<100;
+  !!VR(spell):S74;
+!!el;
+  !!FU:E;
+!!en;
+
+; Exit if the targeted stack cannot receive the spell
+!!if&(atkStack)<>(defStack);
+  !!BM(atkStack):I?(atkSide:y);
+
+  !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+  !!FU&(canReceive)=(FALSE):E;
+!!en;
+
+; Exit if the defending stack has been buffed with the same spell
+!!BM(defStack):G(spell)/?(duration:y)/?(level:y);
+!!FU&(duration)>0:E;
+
+; Cast the spell
+!!BM(defStack):P?(defPos:y);
+!!BM(atkStack):C(spell)/(defPos)/(SKILL_EXPERT)/(powerCoef)/(TRUE);
+
+!!VR(result):S(TRUE);
+
+// Special Poisons (Chimera, etc.)
+!?FU(casts_CastSpecialPoison);
+!#VA(atkStack:x);                       [Caster]
+!#VA(defStack:x);                       [Spell target]
+!#VA(noRetaliation:x);                  [Whether prevent the victim to retaliate]
+!#VA(chance:x);                         [Chance to cast each spell]
+!#VA(fifthItem:x);                      [Spell 1/Spell 2/...]
+
+!!FU:A?(numArgs:y);
+
+!!if&(numArgs)<5;
+  !!SN:F^ShowErmError^/^Invalid number of parameters. Expected at least 5.^;
+  !!FU:E;
+!!en;
+
+; Exit if the attacking (possible with Fire Shield) or defending stack is killed
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if Alive
+!!BM(defStack):F?(flags:y);
+!!VR(isAlive:y):S(flags) &(MON_FLAG_ALIVE);
+!!FU&(isAlive)=(FALSE):E;
+
+; Exit if the ranom number is not favoured
+!!VR(random:y):R0/0/99;
+!!FU&(random)>=(chance):E;
+
+!!VR(spellCast:y):S(FALSE);
+
+!!re i/(@fifthItem)/(numArgs);
+  !!VR(spell:y):Sxi;
+
+  ; Exit if the targeted stack cannot receive the spell
+  !!if&(atkStack)<>(defStack);
+    !!BM(atkStack):I?(atkSide:y);
+    !!FU(casts_Battle_CanStackReceiveSpell):P(defStack)/(spell)/(atkSide)/?(canReceive:y);
+    !!co&(canReceive)=(FALSE);
+  !!en;
+
+  ; Exit if the defending stack has been buffed with the same spell
+  !!BM(defStack):G(spell)/?(duration:y)/?(level:y);
+  !!co&(duration);
+
+  ; Cast the spell
+  !!BM(defStack):P?(defPos:y);
+  !!BM(atkStack):C(spell)/(defPos)/(SKILL_NOT_LEARNED)/3/(TRUE);
+
+  !!VR(spellCast):S(TRUE);
+!!en;
+
+!!FU(casts_CancelRetaliation)&(spellCast)/(noRetaliation):P(atkStack)/(defStack);
