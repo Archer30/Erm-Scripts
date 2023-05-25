@@ -1,0 +1,37 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.9.3+, Era Erm Framework
+
+; 10% chance to miss a melee attack on Darkness Dragon
+
+
+!?FU(OnBeforeBattleAction);
+!!BG:A?(action:y);
+
+!!if&(action)=(BATTLE_ACTION_WALK_AND_ATTACK);
+  !!BG:E?(defStack:y);
+  !!BM(defStack):T?(type:y);
+  !!FU(dark_CheckIfMonIsEligible):P(type)/?(result:y);
+
+  !!if&(result);
+    !!VR(random:y):R0/0/9;
+
+    !!if&(random)<>-1;
+      !!BG:D-1;                         [Make the victim walk to the creature with Darkness bvt stop before attack]
+
+      !!VRi^es_351_missInDarkness^&i^battle_isVisible^:S(TRUE);
+    !!en;
+  !!en;
+!!en;
+
+!?FU(OnBattleActionEnd)&i^es_351_missInDarkness^;
+!!SN:P^fear^;
+!!BMi^battle_acting_stack^:V6;          [Blind animation]
+!!VRi^es_351_missInDarkness^:S(FALSE);
+
+!?FU(dark_CheckIfMonIsEligible);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+!!VR(result)&(mon)=(MON_DARKNESS_DRAGON):S(TRUE);

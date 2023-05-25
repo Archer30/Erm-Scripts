@@ -1,0 +1,150 @@
+ZVSE2
+; Author:   Archer30
+; Idea:     toriko94
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; A new Dungeon building can be built via right-clicking on town hall for upgrading Black Dragon to Darkness Dragon. 
+
+
+; ============== SETTINGS ==============
+!#VRs^ultcave_startString^:S^{Ultimate Dragon Cave}
+
+The Ultimate Dragon Cave allows you to upgrade Red Dragons to Black Dragons.^;
+!#VRs^ultcave_alreadyBuilt^:S^{~r}Already built here this turn.{~}^;
+!#VRs^ultcave_cannotAfford^:S^{~r}Cannot afford Ultimate Dragon Cave.{~}^;
+!#VRs^ultcave_noUpgDragonCave^:S^{~r}Requires: Upgraded Dragon Cave.{~}^;
+!#VRs^ultcave_askToBuild^:S^Do you want to build Ultimate Dragon Cave?^;
+; ============ END SETTINGS ============
+
+
+****************************************************************************************************
+
+; Manage new upgrade
+!?FU(OnDetermineMonInfoDlgUpgrade);
+!#VA(monType:x) (upgType:x) (town:x) (hero:x);
+
+!!FU&(upgType)<>(NO_MON):E;
+
+!!if&(monType)=83;
+  !!CA0/(town):T?(townType:y);
+
+  !!if&(townType)=(TOWN_DUNGEON)/i^ultcave_ultimateDragonCave_%(town)^;
+    !!VR(upgType):S155;
+  !!en;
+!!en;
+
+****************************************************************************************************
+
+; Mouse event in town
+!?FU(OnTownMouseClick)&i^mouse_item^>=10/i^mouse_item^<=13/i^mouse_action^=(MOUSE_RMB_PRESSED)/999;
+!!CA(CURRENT_TOWN):T?(townType:y);
+!!FU&(townType)<>(TOWN_DUNGEON):E;
+
+; Disable standard mouse interactions in particular cases
+!!UN:P(WOG_OPT_DISABLE_TOWN_DEMOLISHING)/?(demolition:y); [check if town demolition is enabled]
+
+!!if&(demolition);
+  !!CM:R0;                              [if it is not enabled - disable any standard text]
+!!el;
+  !!CA(CURRENT_TOWN):B3/0;              [Cancel standard action if Level 1 Mage Guild is built - town hall can't be demolished in this case]
+
+  !!CM&1:R0;
+!!en;
+
+!!CA(CURRENT_TOWN):U?(townId:y);
+
+; If Ultimate Dragon Town has not yet been built
+!!if&i^ultcave_ultimateDragonCave_%(townId)^=(FALSE);
+  ; Check if all the conditions for building are meet
+  !!CA(CURRENT_TOWN):R?(hasBuilt:y);
+
+  !!if&(hasBuilt);
+    !!FU(ultcave_ShowUltimateDragonCaveDialog):P(MSG_TYPE_MES)/s^ultcave_alreadyBuilt^; 
+    !!FU:E;
+  !!en;
+
+  !!FU(WOG_Player_CheckEnoughResources):P?(result:y)/(CURRENT_PLAYER)/0/0/5/10/0/0/5000;
+
+  !!if&(result)=(FALSE);
+    !!FU(ultcave_ShowUltimateDragonCaveDialog):P(MSG_TYPE_MES)/s^ultcave_cannotAfford^; 
+    !!FU:E;
+  !!en;
+
+  !!CA(CURRENT_TOWN):B3/43;
+
+  !!if&-1;
+    !!FU(ultcave_ShowUltimateDragonCaveDialog):P(MSG_TYPE_MES)/s^ultcave_noUpgDragonCave^; 
+    !!FU:E;
+  !!en;
+
+  !!FU(ultcave_ShowUltimateDragonCaveDialog):P(MSG_TYPE_QUESTION)/s^ultcave_askToBuild^/?(choice:y);
+
+  !!if&(choice);
+    !!SN:P^BUILDTWN^;
+    !!VRi^ultcave_ultimateDragonCave_%(townId)^:S(TRUE);
+    !!FU(WOG_Player_RemoveResources):P(CURRENT_PLAYER)/0/0/5/10/0/0/5000;
+    !!SN:D;
+    !!UN:R2;
+  !!en;
+
+; If Ultimate Dragon Town has been built
+!!el;
+  !!FU(ultcave_ShowUltimateDragonCaveDialog):P(MSG_TYPE_MES)/^^;
+!!en;
+
+!?FU(ultcave_ShowUltimateDragonCaveDialog);
+!#VA(msgType:x) (string:x) (choice:x);
+
+; Memory patch (Resour82.def -> Resource.def)
+!!UN:C5199571/(UNC_UINT32)/?(saveMemory1:y) C5199571/(UNC_UINT32)/(PTR_RESOURCE_DEF);
+!!UN:C5199620/(UNC_UINT32)/?(saveMemory2:y) C5199620/(UNC_UINT32)/(PTR_RESOURCE_DEF);
+
+!!VR(msg:z):Ss^ultcave_startString^;
+!!SN:Kz(string)/?(length:y);
+
+!!if&(length)>0;
+  !!VR(msg):+^
+
+%z(string)^;
+!!en;
+
+!!IF:N(PIC_TYPE_DUNGEON_TOWN_BUILDING)/43/(RES_ORE)/5/(RES_SULFUR)/10/(RES_GOLD)/5000 N(msgType)/(msg)/?(choice);
+
+; memory patch (restore original code)
+!!UN:C5199571/(UNC_UINT32)/(saveMemory1) C5199620/(UNC_UINT32)/(saveMemory2);
+
+; Demolish Ultimate Dragon Cave if Upgraded Dragon Cave is demolished
+!?FU(OnAfterBuildTownBuilding)&i^tum_onTownScreen^;
+!#VA(townId:x) (buildingId:x);
+
+!!CA0/(townId):T?(townType:y);
+
+!!if&(townType)=(TOWN_DUNGEON)/(buildingId)=43;
+  !!VRi^ultcave_ultimateDragonCave_%(townId)^:S(FALSE);
+!!en;
+
+****************************************************************************************************
+
+; Build the building for AI every 3 days
+!?FU(OnEveryDay)&i^timerOnce^;
+!!VR(counter:y):Si^timerDay^ %3;
+!!FU&(counter)<>0:E;
+
+!!VR(x:y):S-1;
+
+; loop through all the towns
+!!re i;
+  !!UN:U(OBJ_TOWN)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  !!CA(x)/(y)/(z):T?(townType:y) U?(townId:y) B3/43;
+
+  !!if&(townType)=(TOWN_DUNGEON)/i^ultcave_ultimateDragonCave_%(townId)^<>(TRUE)/1;
+    !!CA(x)/(y)/(z):O?(owner:y);
+    !!FU(WOG_Player_RemoveResources):P(owner)/0/0/5/10/0/0/5000;
+    !!VRi^ultcave_ultimateDragonCave_%(townId)^:S(TRUE);
+  !!en;
+!!en;
+
+****************************************************************************************************
