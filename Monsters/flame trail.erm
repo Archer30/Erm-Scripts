@@ -1,0 +1,82 @@
+ZVSE2
+; Author:   Archer30 and daemon_n
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Leaves a trail of flames behind as the caster moves
+; Works for infantry (walking units) only
+
+
+!?FU(arch_CheckIfMonHasFlameTrail);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+; ========================== TESTING ==========================
+!!VR(result)&(mon)=(MON_HELL_STEED):S(TRUE);
+; ======================== END TESTING ========================
+
+!?FU(arch_CreateERMHook);
+!!SN:Ex1/1/4464284/(arch_OnStackMakesStep); // hook in "while" loop of the walking stacks each HEX passed;
+
+; Set up an array at the start of moving
+!?FU(OnBeforeBattleAction);
+!!BG:A?(action:y);
+
+!!if|(action)=(BATTLE_ACTION_WALK)/(action)=(BATTLE_ACTION_WALK_AND_ATTACK);
+  !!BMi^battle_current_stack^:T?(type:y);
+  !!FU(arch_CheckIfMonHasFlameTrail):P(type)/?(result:y);
+
+  !!if&(result);
+    !!SN:Mi^arch_flameTrailPosList^;
+    !!FU(NewIntArray):P?i^arch_flameTrailPosList^/(M_TEMP);
+  !!en;
+!!en;
+
+; Store every coordinates the caster passes by
+!?FU(arch_OnStackMakesStep)&i^arch_flameTrailPosList^;
+!#VA(hook:x);
+
+!!UN:C(hook:x)/(STRUCT_HOOK_CONTEXT_EAX)/4/?(hexToGo:y);
+!!UN:C(COMBAT_MANAGER)/4/?(cmbMgr:y);
+
+!!re i/0/5;
+  !!VR(offset:y):S6 *(hexToGo) +i *2 +78952;
+  !!UN:C(cmbMgr)/(offset)/2/?(adjhex:y);
+!!en;
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_ESI)/4/?(stackPtr:y);
+!!UN:C(stackPtr)/244/4/?(side:y) C(stackPtr)/248/4/?(sId:y);
+!!VR(stackId:y):S(side) *(BATTLE_STACKS_PER_SIDE) +(sId);
+!!BM(stackId):P?(pos:y);
+
+!!FU(Array_Push):Pi^arch_flameTrailPosList^/(pos);
+
+; Generate flames on the battlefield
+!?FU(OnBattleActionEnd)&i^arch_flameTrailPosList^;
+!!BMi^battle_current_stack^:N?(num:y);
+
+!!if&(num)>0;
+  !!SN:Mi^arch_flameTrailPosList^/?(size:y);
+
+  !!if&(size)>0;
+    !!UN:C(COMBAT_MANAGER)/4/?(combatManager:y);
+
+    ; Set up values
+    !!UN:C5901158/4/440;                    [Hawaiing's hack]
+    !!UN:C5901162/2/36864;
+    !!UN:C5901449/1/159;
+
+    !!re i/1/(size)/1/-1;
+      !!SN:Mi^arch_flameTrailPosList^/i/?(pos:y);
+      !!SN:E5898560/(CALLCONV_THISCALL)/(combatManager)/(SPELL_FIRE_WALL)/(pos)/(TRUE)/-1/(SKILL_EXPERT)/3;[spell/pos/has spell book/(-1 valid/0 not valid)/level/power]
+    !!en;
+
+    ; Restore values
+    !!UN:C5901158/4/2210438415;
+    !!UN:C5901162/2/704;
+    !!UN:C5901449/1/142;
+
+    !!SN:Mi^arch_flameTrailPosList^;
+    !!VRi^arch_flameTrailPosList^:S0;
+  !!en;
+!!en;
