@@ -4,7 +4,7 @@ ZVSE2
 ; Requires: ERA 3.3+, Era Erm Framework
 
 ; Leaves a trail of flames behind as the caster moves
-; Works for infantry (walking units) only
+; Works for infantries (walking units) only
 
 
 !?FU(arch_CheckIfMonHasFlameTrail);
@@ -17,6 +17,11 @@ ZVSE2
 
 !?FU(arch_CreateERMHook);
 !!SN:Ex1/1/4464284/(arch_OnStackMakesStep); // hook in "while" loop of the walking stacks each HEX passed;
+
+; Reset variables
+!?FU(OnSetupBattlefield);
+!!SN:Mi^arch_flameTrailPosList^;
+!!VRi^arch_flameTrailPosList^:S0;
 
 ; Set up an array at the start of moving
 !?FU(OnBeforeBattleAction);
@@ -75,8 +80,8 @@ ZVSE2
     !!UN:C5901158/4/2210438415;
     !!UN:C5901162/2/704;
     !!UN:C5901449/1/142;
-
-    !!SN:Mi^arch_flameTrailPosList^;
-    !!VRi^arch_flameTrailPosList^:S0;
   !!en;
 !!en;
+
+!!SN:Mi^arch_flameTrailPosList^;
+!!VRi^arch_flameTrailPosList^:S0;

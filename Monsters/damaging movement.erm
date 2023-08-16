@@ -1,0 +1,182 @@
+ZVSE2
+; Author:   Archer30 and daemon_n
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Creature damages all enemies adjacent to the tiles it walks through. Damage depends on stack size. Won't work on flyers.
+; This script works for infrntries (walking units) only
+; The damage dealing to wide unit is 50% of the normal damage (as wide unit is usually tankier)
+
+
+!?FU(arch_CheckMonHasDamagingMovementDamage);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S0;
+; ========================== TESTING ==========================
+!!VR(result)&(mon)=(MON_CENTAUR_CAPTAIN):S5;
+; ======================== END TESTING ========================
+
+!?FU(arch_CreateERMHook);
+!!SN:Ex1/1/4464284/(arch_OnStackMakesStep); // hook in "while" loop of the walking stacks each HEX passed;
+
+; Reset variables
+!?FU(OnSetupBattlefield);
+!!SN:Mi^arch_DamagingMovementPosList^;
+!!VRi^arch_DamagingMovementPosList^:S0;
+!!VRi^arch_DamagingMovementIsWide^:S0;
+
+; Set up an array at the start of moving
+!?FU(OnBeforeBattleAction);
+!!BG:A?(action:y);
+
+!!if|(action)=(BATTLE_ACTION_WALK)/(action)=(BATTLE_ACTION_WALK_AND_ATTACK);
+  !!BMi^battle_acting_stack^:T?(type:y);
+  !!FU(arch_CheckMonHasDamagingMovementDamage):P(type)/?(result:y);
+
+  !!if&(result)>0;
+    !!BMi^battle_acting_stack^:F?(flags:y);
+    !!VRi^arch_DamagingMovementIsWide^:S(flags) &(MON_FLAG_WIDE) B;
+
+    !!SN:Mi^arch_DamagingMovementPosList^;
+    !!FU(NewIntArray):P?i^arch_DamagingMovementPosList^/(M_TEMP);
+  !!en;
+!!en;
+
+; Store every coordinates the caster passes by
+!?FU(arch_OnStackMakesStep)&i^arch_DamagingMovementPosList^;
+!#VA(hook:x);
+
+!!UN:C(hook:x)/(STRUCT_HOOK_CONTEXT_EAX)/4/?(hexToGo:y);
+!!UN:C(COMBAT_MANAGER)/4/?(cmbMgr:y);
+
+!!re i/0/5;
+  !!VR(offset:y):S6 *(hexToGo) +i *2 +78952;
+  !!UN:C(cmbMgr)/(offset)/2/?(adjhex:y);
+!!en;
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_ESI)/4/?(stackPtr:y);
+!!UN:C(stackPtr)/244/4/?(side:y) C(stackPtr)/248/4/?(sId:y);
+!!VR(stackId:y):S(side) *(BATTLE_STACKS_PER_SIDE) +(sId);
+!!BM(stackId):P?(pos:y);
+
+!!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+
+; Deal with wide units
+!!if&i^arch_DamagingMovementIsWide^;
+  !!if&i^battle_acting_side^=(BATTLE_LEFT);
+    !!VR(pos):+1;
+  !!el;
+    !!VR(pos):-1;
+  !!en;
+
+  !!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+!!en;
+
+; Check if any stack is adjacent to the movement path
+!?FU(OnBattleActionEnd)&i^arch_DamagingMovementPosList^;
+!!BMi^battle_acting_stack^:N?(num:y);
+
+!!if&(num)>0;
+  !!BMi^battle_acting_stack^:P?(pos:y);
+  !!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+
+  ; Deal with wide units
+  !!if&i^arch_DamagingMovementIsWide^;
+    !!if&i^battle_acting_side^=(BATTLE_LEFT);
+      !!VR(pos):+1;
+    !!el;
+      !!VR(pos):-1;
+    !!en;
+
+    !!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+  !!en;
+
+  !!FU(Array_SortedUnique):Pi^arch_DamagingMovementPosList^;
+  !!SN:Mi^arch_DamagingMovementPosList^/?(size:y);
+
+  !!if&(size)>0;
+    !!FU(NewIntArray):P?(affectedStacksList:y);
+    !#VA(poses[6]:y);
+
+    !!re i/0/(size)/1/-1;
+      ; Check the adjacent hexes of every hexes the caster walked through
+      !!SN:Mi^arch_DamagingMovementPosList^/i/?(pos:y);
+      !!VR(isOddRow:y):S(pos) :17 %2;
+
+      !!VR(firstPos:y)&(isOddRow):S(pos) -17;
+      !!VR(firstPos)&(isOddRow)<>(TRUE):S(pos) -16;
+
+      !!re j/0/5;
+        !!if&j=0;
+          !!VR(poses[j]):S(firstPos);
+        !!el&j=1;
+          !!VR(poses[j]):S(pos) +1;
+        !!el&j=2;
+          !!VR(poses[j]):S(firstPos) +34;
+        !!el&j=3;
+          !!VR(poses[j]):S(firstPos) +33;
+        !!el&j=4;
+          !!VR(poses[j]):S(pos) -1;
+        !!el;
+          !!VR(poses[j]):S(firstPos) -1;
+        !!en;
+
+        ; If a unit's found, add to the array
+        !!if&(poses[j])>0/(poses[j])<185;
+          !!BU:E(poses[j])/?(stack:y);
+
+          !!FU(Array_Push)&(stack)>(NO_STACK):P(affectedStacksList)/(stack);
+        !!en;
+      !!en;
+    !!en;
+
+    !!FU(Array_SortedUnique):P(affectedStacksList);
+    !!SN:M(affectedStacksList)/?(size:y);
+
+    !!if&(size)>0;
+      ; Get the damage would be done by the damaging movement unit
+      !!BMi^battle_acting_stack^:T?(type:y) N?(actNum:y);
+      !!FU(arch_CheckMonHasDamagingMovementDamage):P(type)/?(damage:y); [Get the damage per unit of the unit just moved]
+      !!VR(normDamage:y):S(damage) *(actNum); [Damage for single hex unit]
+      !!VR(wideDamage:y):S(normDamage) :2 F1/(INT_MAX); [Damage for wide unit (1/2)]
+
+      ; Initialise the variable for checking whether damage is inclicted to at least one unit
+      !!VR(damageInflicted:y)&i^battle_isVisible^:S(FALSE);
+
+      ; Check out if units are flyers or wide
+      !!re i/0/(size)/1/-1;
+        !!SN:M(affectedStacksList)/i/?(targetStack:y);
+        !!BM(targetStack):I?(side:y);
+        !!co&(side)=i^battle_acting_side^;
+
+        !!BM(targetStack):F?(flags:y);
+        !!VR(isFlyer:y):S(flags) &(MON_FLAG_FLYER);
+        !!co&(isFlyer);                 [Flying units are not affected]
+
+        !!VR(damageInflicted)&i^battle_isVisible^:S(TRUE);
+
+        ; Different damage depending on whether the target is wide
+        !!VR(isWide:y):S(flags) &(MON_FLAG_WIDE);
+        
+        !!if&(isWide);
+          !!BM(targetStack):K(wideDamage);
+        !!el;
+          !!BM(targetStack):K(normDamage);
+        !!en;
+      !!en;
+
+      !!if&i^battle_isVisible^/(damageInflicted);
+        ; Battle log
+        !!VR(isPlural:y):S(num) -1 B;
+        !!SN:H^monname^/(type)/(isPlural)/?(monName:z);
+        !!SN:T^dal.str.damagingMovement%(isPlural)^/?(battleLog:z)/^mon^/(monName);
+        !!MM:S(battleLog);
+      !!en;
+    !!en;
+  !!en;
+!!en;
+
+; Release the array and variables
+!!SN:Mi^arch_DamagingMovementPosList^;
+!!VRi^arch_DamagingMovementPosList^:S0;
+!!VRi^arch_DamagingMovementIsWide^:S0;
