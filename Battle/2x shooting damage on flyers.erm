@@ -1,0 +1,20 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; 2 times of shooting damgae on flying units, simple as that.
+
+
+!?FU(OnStackToStackDamage);
+!#VA(atkStack:x) (defStack:x) (finalDmgConst:x) (finalDmg:x) (basicDmg:x) (dmgBonus:x) (isDistant:x) (distancArg:x) (isTheoretical:x);
+
+!!FU&(isDistant)=(FALSE):E;
+
+!!BM(defStack):F?(flag:y);
+!!VR(canFly:y):S(flag) &(MON_FLAG_FLYER);
+
+!!if&(canFly);
+  !!VR(finalDmgNew):S(finalDmgConst) *2;
+  !!VR(finalDmg)&(finalDmgNew)>(finalDmg):S(finalDmgNew);
+!!en;

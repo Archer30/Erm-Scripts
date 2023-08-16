@@ -1,0 +1,25 @@
+ZVSE2
+; Author:   daemon_n
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Get the filename of def of an normal obstacle on the battlefield
+
+
+!?FU(OnBattleScreenMouseClick)&i^mouse_action^=(MOUSE_RMB_PRESSED)/i^mouse_battleHex^>0;
+!!BU:Oi^mouse_battleHex^/?(flag:y);
+!!VR(hasNormObstacle:y):S(flag) &2;
+
+; If it is a normal obstacle, check for its type
+!!if&(hasNormObstacle);
+  !!UN:C(COMBAT_MANAGER)/4/?(combatMgr:y);
+  !!VR(offset:y):S112 *i^mouse_battleHex^ +452 +20;
+  !!UN:C(combatMgr)/(offset)/4/?(obstacleIndex:y);
+  !!UN:C(combatMgr)/81240/4/?(obstaclesVector:y);
+  !!UN:C(combatMgr)/81244/4/?(first:y); C(combatMgr)/81248/4/?(end:y);
+  !!VR(neededObstaclePtr:y):S24 *(obstacleIndex) +(first);
+  !!UN:C(neededObstaclePtr)/4/4/?(obstacleInfoPtr:y);
+  !!UN:C(obstacleInfoPtr)/16/4/?(namePtr:y);
+  !!SN:B(namePtr)/d/?(obstacleName:z);
+  !!IF:L^mouse_battleHex = %i(mouse_battleHex), obstacleIndex = %(obstacleIndex), obstacleName = %(obstacleName)^;
+!!en;

@@ -1,0 +1,185 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; When allies are attacked by the enemy within melee reach, the creature will always hit back.
+; If a guardian is hypnotized, it would attack with the new team.
+
+
+; ============== SETTINGS ==============
+!#VRs^guard_battleLog_0^:S^ initiates a protective attack.^;
+!#VRs^guard_battleLog_1^:S^ initiate a protective attack.^;
+; ============ END SETTINGS ============
+
+
+!?FU(arch_CheckIfMonIsGuardian);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+; ========================== TESTING ==========================
+!!VR(result)&(mon)=(MON_CAVALIER):S(TRUE);
+; ======================== END TESTING ========================
+
+!?FU(OnBattleActionEnd)&i^battle_acting_stack^>(NO_STACK);
+; Check if it is a melee attack and also the attacker isn't killed
+!!BG:A?(action:y) E?(targetStack:y);
+
+!!if&(action)=(BATTLE_ACTION_WALK_AND_ATTACK);
+  ; Get the position of the attacker and the real side (considering it may be changed by Hypnotize)
+  !!VR(atkSecPos:y):S-1;
+  !!BMi^battle_acting_stack^:P?(atkPos:y);
+  !!BMi^battle_acting_stack^:I?(realSide:y) G(SPELL_HYPNOTIZE)/?(hypnotizeTurns:y)/d F?(flag:y);
+  !!VR(isWide:y):S(flag) &(MON_FLAG_WIDE);
+
+  !!if&(isWide);
+    !!if&(realSide)=(BATTLE_LEFT);
+      !!VR(atkSecPos):S(atkPos) +1;
+    !!el;
+      !!VR(atkSecPos):S(atkPos) -1;
+    !!en;
+  !!en;
+
+  !!VR(realSide)&(hypnotizeTurns)>0:X(TRUE);
+
+  ; Look for Guardian
+  !!re i/(BATTLE_STACK_FIRST)/(BATTLE_STACK_LAST);
+    ; Break if the attacker just got killed (by previous attacks from guardians)
+    !!BMi^battle_acting_stack^:N?(atkNum:y);
+    !!br&(atkNum)<=0;
+
+    ; Skip the stack just got attacked
+    !!co&i=(targetStack);
+
+    ; Skip if the stack is killed
+    !!BMi:N?(guardNum:y);
+    !!co&(guardNum)<=0;
+
+    ; Check if the stack is a guardian
+    !!BMi:T?(guardType:y);
+    !!FU(arch_CheckIfMonIsGuardian):P(guardType)/?(result:y);
+
+    ; Check if the stack can move
+    !!if&(result);
+      !!BMi:G(SPELL_BLIND)/?(blindTurns:y)/d G70/?(stoneTurns:y)/d G74/?(paralyzeTurns:y)/d;
+
+      ; Check if the stack is hypnotized or belongs to another team
+      !!if&(blindTurns)=0/(stoneTurns)=0/(paralyzeTurns)=0;
+        !!BMi:I?(side:y) G(SPELL_HYPNOTIZE)/?(hypnotizeTurns:y)/d;
+
+        !!co&(side)<>(realSide)/(hypnotizeTurns)>0;
+        !!co&(side)=(realSide)/(hypnotizeTurns)=0;
+
+        ; Check if it is adjacent to the attacker
+        !!VR(guardSecPos:y):S-1;
+
+        !!BMi:P?(guardPos:y);
+        !!FU(guard_CalcHexesDistance):P(atkPos)/(guardPos)/?(distance:y);
+
+        ; Check again using the second position of the attacker
+        !!if&(distance)>1/(atkSecPos)>-1;
+          !!FU(guard_CalcHexesDistance):P(atkSecPos)/(guardPos)/?(distance:y);
+        !!en;
+
+        ; Check again for the second position of the guardian
+        !!if&(distance)>1;
+          !!BMi:F?(flag:y);
+          !!VR(isWide:y):S(flag) &(MON_FLAG_WIDE);
+
+          !!if&(isWide);
+            !!if&(side)=(BATTLE_LEFT);
+              !!VR(guardSecPos:y):S(guardPos) +1;
+            !!el;
+              !!VR(guardSecPos):S(guardPos) -1;
+            !!en;
+
+            !!FU(guard_CalcHexesDistance):P(atkPos)/(guardSecPos)/?(distance:y);
+
+            !!if&(distance)>1/(atkSecPos)>-1;
+              !!FU(guard_CalcHexesDistance):P(atkSecPos)/(guardSecPos)/?(distance:y);
+            !!en;
+          !!en;
+        !!en;
+
+        ; Get the direiction of attack if the guardian is adjacent to the attacker
+        !!if&(distance)=1;
+          ; Get the direction of attack
+          !!FU(guard_GetCoordsOfBattlefieldPosition):P(guardPos)/?(guardX:y)/?(guardY:y) P(atkPos)/?(atkX:y)/?(atkY:y);
+
+          !!if&(guardY)>(atkY);
+            !!VR(direction:y):S0;
+          !!el&(guardY)=(atkY);
+            !!VR(direction):S1;
+          !!el;
+            !!VR(direction):S2;
+          !!en;
+
+          ; Check if it is required to turn around
+          !!VR(mustTurnAround:y):S(FALSE);
+
+          !!if&(guardX)<(atkX);
+            !!VR(mustTurnAround)&(side)=(BATTLE_RIGHT):S(TRUE);
+          !!el;
+            !!VR(mustTurnAround)&(side)=(BATTLE_LEFT):S(TRUE);
+          !!en;
+
+          ; Get data
+          !!BMi:Z?(guardStruct:y);
+          !!BMi^battle_acting_stack^:Z?(atkStruct:y);
+
+          ; Show battle log
+          !!if&i^battle_isVisible^;
+            !!VR(isPlural:y):S(guardNum) -1 B;
+            !!SN:H^monname^/(guardType)/(isPlural)/?(monName:z);
+            !!VR(battleLog:z):S(monName) +s^guard_battleLog_%(isPlural)^;
+            !!MM:S(battleLog);
+          !!en;
+
+          ; Turn around
+          !!SN&(mustTurnAround):E4482112/2/(guardStruct)/1;
+          ; Melee attack
+          !!SN:E4461360/(CALLCONV_THISCALL)/(guardStruct)/(atkStruct)/(direction);
+          ; Turn back
+          !!SN&(mustTurnAround):E4482112/2/(guardStruct)/1;
+        !!en;
+      !!en;
+    !!en;
+  !!en;
+!!en;
+
+!?FU(guard_CalcHexesDistance);  [By Berserker]
+!#VA(pos1:x) (pos2:x) (result:x);
+
+; Arguments: Pos1, Pos2, ?Res
+!!VRy1:Sx1%17;
+!!VRy2:Sx1:17;
+!!VRy3:Sx2%17;
+!!VRy4:Sx2:17;
+
+!!VRy5:Sy2-y4;
+!!VRy5&y5<0:*-1;
+
+!!VRy6:Sy1-y3*2;
+!!VRy7:Sy2&1;
+!!VRy8:Sy4&1;
+!!VRy6:-y7+y8;
+!!VRy6&y6<0:*-1;
+!!VRy6:-y5;
+
+!!VRy7:Sy5*2;
+!!VRy7&y6>0:+y6;
+!!VRy7::2;
+!!VRx3:Sy7;
+
+!?FU(guard_GetCoordsOfBattlefieldPosition); [By Hawaiing]
+!#VA(pos:x) (x:x) (y:x);
+
+!!UN:C6919200/4/?y1;                    [Battle Manager]
+!!VRy2:Sx1 *112;
+!!VRy3:Sy2 +y1 +452;                    [Coordinates structure]
+!!VRy4:Sy3 +4; 
+!!UN:Cy4/2/?y5;                         [X]
+!!VRy6:Sy3 +6; 
+!!UN:Cy6/2/?y7;                         [Y]
+!!VRx2:Sy5 +22;
+!!VRx3:Sy7 +26;

@@ -59,8 +59,6 @@ ZVSE2
 
 ; ========================== TESTING ==========================
 
-!?FU(OnStartOrLoad);
+!?FU(OnGameEnter);
 !!FU(abil_SetUpMonsterSpecialAbility1):P(MON_GHOST_DRAGON)/0;
 !!FU(abil_SetUpMonsterSpecialAbility2):P(MON_GHOST_DRAGON)/0;
-!!FU(abil_SetUpMonsterSpecialAbility1)&i^Typhon_Third_Upgrade_Mod_Active^:P(MON_GHOST_DRAGON)/0;
-!!FU(abil_SetUpMonsterSpecialAbility2)&i^Typhon_Third_Upgrade_Mod_Active^:P(MON_GHOST_DRAGON)/0;

@@ -1,0 +1,68 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Team attack (ranged) creature would shoot the target allies' are shooting.
+; If a team attacker is hypnotized, it would shoot with the new team.
+
+
+!?FU(teamatk_CheckIfMonHasTeamAttackRanged);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+; ========================== TESTING ==========================
+!!VR(result)&(mon)=(MON_ARCHER):S(TRUE);
+; ======================== END TESTING ========================
+
+!?FU(OnBattleActionEnd);
+; Check if it is shooting and also the target isn't killed
+!!BG:A?(action:y) E?(targetStack:y);
+
+!!if&(action)=(BATTLE_ACTION_SHOOT)/(targetStack)>(NO_STACK);
+  ; Get the position of the target and the real side (considering it may be changed by Hypnotize)
+  !!BM(targetStack):P?(pos:y);
+  !!BMi^battle_acting_stack^:I?(realSide:y) G(SPELL_HYPNOTIZE)/?(hypnotizeTurns:y)/d;
+  !!VR(realSide)&(hypnotizeTurns)>0:X(TRUE);
+
+  ; Look for team attack (ranged) creatures
+  !!re i/(BATTLE_STACK_FIRST)/(BATTLE_STACK_LAST);
+    ; Break if the target just got killed (by previous shooting from team attacker)
+    !!BM(targetStack):N?(num:y);
+    !!br&(num)<=0;
+
+    ; Skip the stack just attacked
+    !!co&i=i^battle_acting_stack^;
+
+    ; Check if the stack has Team Attack (range)
+    !!BMi:T?(type:y);
+    !!FU(teamatk_CheckIfMonHasTeamAttackRanged):P(type)/?(result:y);
+
+    ; Check if the stack can move
+    !!if&(result);
+      !!BMi:G(SPELL_BLIND)/?(blindTurns:y)/d G70/?(stoneTurns:y)/d G74/?(paralyzeTurns:y)/d;
+
+      ; Check if it is possible to shoot
+      !!if&(blindTurns)=0/(stoneTurns)=0/(paralyzeTurns)=0;
+        !!BMi:Z?(stackPtr:y);
+        !!SN:E4466192/(CALLCONV_THISCALL)/(stackPtr)/0;
+
+        ; Check if the stack is hypnotized or belongs to another team
+        !!BMi:I?(side:y) G(SPELL_HYPNOTIZE)/?(hypnotizeTurns:y)/d;
+
+        !!co&(side)=(realSide)/(hypnotizeTurns)>0;
+        !!co&(side)<>(realSide)/(hypnotizeTurns)=0;
+
+        ; Execute team attack (ranged)
+        !!if&v1;
+          ; Save and change data
+          !!BMi:G-95/?(savedPos1:y)/d G-95/(pos)/d;
+          ; Shoot
+          !!FU(BattleStack_Shoot):Pi/(targetStack);
+          ; Restore
+          !!BMi:G-95/(savedPos1)/d;
+        !!en;
+      !!en;
+    !!en;
+  !!en;
+!!en;

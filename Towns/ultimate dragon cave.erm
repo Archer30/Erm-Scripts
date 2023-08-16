@@ -1,10 +1,12 @@
 ZVSE2
 ; Author:   Archer30
 ; Idea:     toriko94
-; Engine:   ERM 2.0+
+; Engine:   ERM 2.0+, Extended Dwellings Mod
 ; Requires: ERA 3.3+, Era Erm Framework
 
 ; A new Dungeon building can be built via right-clicking on town hall for upgrading Black Dragon to Darkness Dragon. 
+; Limitations:
+; There is no A + key pressing support for fast upgrade
 
 
 ; ============== SETTINGS ==============
@@ -36,7 +38,7 @@ The Ultimate Dragon Cave allows you to upgrade Red Dragons to Black Dragons.^;
 
 ****************************************************************************************************
 
-; Mouse event in town
+; Mouse event in town (right-clicking on town hall and its upgrades)
 !?FU(OnTownMouseClick)&i^mouse_item^>=10/i^mouse_item^<=13/i^mouse_action^=(MOUSE_RMB_PRESSED)/999;
 !!CA(CURRENT_TOWN):T?(townType:y);
 !!FU&(townType)<>(TOWN_DUNGEON):E;
@@ -84,8 +86,8 @@ The Ultimate Dragon Cave allows you to upgrade Red Dragons to Black Dragons.^;
     !!SN:P^BUILDTWN^;
     !!VRi^ultcave_ultimateDragonCave_%(townId)^:S(TRUE);
     !!FU(WOG_Player_RemoveResources):P(CURRENT_PLAYER)/0/0/5/10/0/0/5000;
+    !!FU(ultcave_SetUpTownMons):P(townId);
     !!SN:D;
-    !!UN:R2;
   !!en;
 
 ; If Ultimate Dragon Town has been built
@@ -148,3 +150,65 @@ The Ultimate Dragon Cave allows you to upgrade Red Dragons to Black Dragons.^;
 !!en;
 
 ****************************************************************************************************
+
+; Fix the default creature to recruit after building Ultimate Dragon Cave
+!?FU(OnPreTownScreen);
+!#VA(townId:x);
+
+!!CA(CURRENT_TOWN):T?(townType:y);
+
+!!if&(townType)=(TOWN_DUNGEON);
+  !!FU(ultcave_SetUpTownMons):P(townId);
+  !!SN:D;
+!!en;
+
+!?FU(OnAfterBuildTownBuilding)&i^ultcave_onTownScreen^;
+!#VA(townId:x) (buildingId:x);
+
+!!FU(tum_SetUpTownMons)&(buildingId)=43:P(townId); [Works for building and demolishing, here in this script it's mainly for demolishing]
+!!SN:D;
+
+!?FU(ultcave_SetUpTownMons);
+!#VA(townId:x);
+
+; Exit if not Dungeon
+!!CA0/(townId):T?(townType:y);
+!!FU&(townType)<>(TOWN_DUNGEON):E;
+
+; Manage recruit creatures and dialogs
+!!CA(CURRENT_TOWN):B3/43;
+
+; Set up the upgraded monster of the town
+!!if&1/i^ultcave_ultimateDragonCave_%(townId)^;
+  !!IF:M^Set up ultimate Dragon Cave!^;
+  !!UN:T(TOWN_DUNGEON)/(MON_MAX_LEVEL)/(TRUE)/155;
+
+  !!FU(dex_SetDwellingSlotByTownId):P(townId)/6/1/2/82/100;
+  !!FU(dex_SetDwellingSlotByTownId):P(townId)/6/1/1/83/100;
+  !!FU(dex_SetDwellingSlotByTownId):P(townId)/6/1/0/155/100;
+; Demolish Ultimate Dragon Cave if Upgraded Dragon Cave is demolished
+!!el;
+  !!VRi^ultcave_ultimateDragonCave_%(townId)^&-1:S(FALSE);
+  !!UN:T(TOWN_DUNGEON)/(MON_MAX_LEVEL)/(TRUE)/83;
+
+  !!FU(dex_SetDwellingSlotByTownId):P(townId)/6/1/2/(NO_MON)/100;
+  !!FU(dex_SetDwellingSlotByTownId):P(townId)/6/1/1/82/100;
+  !!FU(dex_SetDwellingSlotByTownId):P(townId)/6/1/0/83/100;
+!!en;
+
+!?FU(OnCloseTownScreen);
+!#VA(townId:x);
+
+!!UN:T(TOWN_DUNGEON)/(MON_MAX_LEVEL)/(TRUE)/83;
+
+; Fix Upgrade Chain
+!?FU(OnDetermineMonInfoDlgUpgrade);
+!#VA(monType:x) (upgType:x) (town:x) (hero:x);
+
+!!FU&i^ultcave_ultimateDragonCave_%(town)^<>(TRUE):E;
+
+!!if&(monType)=82/(upgType)=155;
+  !!VR(upgType):S83;
+!!el&(monType)=83/(upgType)=(NO_MON);
+  !!VR(upgType):S155;
+!!en;

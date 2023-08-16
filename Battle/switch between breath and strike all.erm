@@ -37,7 +37,7 @@ ZVSE2
   !!if&(hasBreath);
     !!VR(hasStrikeAll:y):S(monFlags) &(MON_FLAG_ATTACKS_ALL_AROUND);
     !!BMi^battle_current_stack^:T?(type:y) N?(num:y);
-    !!VR(isPlural:y):S(num) B;
+    !!VR(isPlural:y):S(num) -1 B;
     !!SN:H^monname^/(type)/(isPlural)/?(monName:z);
 
     !!if&(hasStrikeAll);

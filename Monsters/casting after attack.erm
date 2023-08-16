@@ -350,6 +350,8 @@ ZVSE2
 
 !?FU(OnBattleActionEnd)&i^casts_stun_retal^>0;
 !!BMi^casts_stun_stack^:Ri^casts_stun_retal^;
+!!VRi^casts_stun_retal^:S0;
+!!VRi^casts_stun_stack^:S0;
 
 // Hook
 !?FU(OnStartOrLoad);

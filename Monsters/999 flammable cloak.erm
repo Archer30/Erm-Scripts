@@ -1,0 +1,177 @@
+ZVSE2
+; Author:   Archer30
+; Idea:     Dalion
+; Special thanks to igrik for his melee attack ability hook
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Gives temporary fire vulnerability to specific monster stacks if they are melee attacked by the dealer
+; The fire vulnerability is indispelable, uneless the monster is dead.
+
+
+; ============== SETTINGS ==============
+; Monster type for granting the ability and spell as a debuff
+!#VRi^firevuln_dealer^:S(MON_SACRED_PHOENIX); [monster with this ability]
+!#VRi^firevuln_spellReplaced^:S77;
+!#VRs^firevuln_spellName^:S^Flammable Cloak^;
+; String
+!#VRs^firevuln_battleLog_0^:S^ becomes vulnerable to fire damage!^; [battle log for singular victim recieving fire vulnerability]
+!#VRs^firevuln_battleLog_1^:S^ become vulnerable to fire damage!^; [battle log for plural victim recieving fire vulnerability]
+; ============ END SETTINGS ============
+
+
+// Set up hook for melee attack ability
+!?FU(OnStartOrLoad);
+!!SN:L^erm_hooker.era^/?(ermHooker:y);
+!!FU&(ermHooker)=0:E;
+
+!!SN:A(ermHooker)/^SetHook^/?(address:y);
+!!FU(firevuln_CreateERMHook):P(address:y);
+
+!?FU(firevuln_CreateERMHook);
+!#VA(address:x);
+
+!!SN:E(address)/1/4462998/(firevuln_HOOK_AfterAttackMainFunc); [Trigger after melee attack, before retaliation]
+
+!?FU(firevuln_HOOK_AfterAttackMainFunc);      [by igrik]
+!!SN:X?(hook:y);
+!!UN:C(hook)/0/(UNC_INT)/?(stackStrucktDefender:y);   
+!!UN:C(hook)/4/(UNC_INT)/?(stackStrucktAttacker:y);  
+!!BG:A?(typeAttack:y);
+!!VR(stackAttackerID:y):S(NO_STACK); 
+!!VR(stackDefenderID:y):S(NO_STACK); 
+
+!!if&(stackStrucktAttacker)<>(FALSE); 
+  !!UN:C(stackStrucktAttacker)/244/(UNC_INT)/?(attakerSide:y); 
+  !!UN:C(stackStrucktAttacker)/248/(UNC_INT)/?(attakerStackIdInSide:y);
+  !!VR(stackAttackerID):S(attakerSide) *(BATTLE_STACKS_PER_SIDE) +(attakerStackIdInSide); 
+!!en;
+
+!!if&(stackStrucktDefender)<>(FALSE);
+  !!UN:C(stackStrucktDefender)/244/(UNC_INT)/?(defenderSide:y);
+  !!UN:C(stackStrucktDefender)/248/(UNC_INT)/?(defenderStackIdInSide:y);
+  !!VR(stackDefenderID):S(defenderSide) *(BATTLE_STACKS_PER_SIDE) +(defenderStackIdInSide);
+!!en;
+
+!!FU(firevuln_OnAfterMelee)&(typeAttack)=(BATTLE_ACTION_WALK_AND_ATTACK):P(stackAttackerID)/(stackDefenderID);
+
+
+// Rename spell for displaying as creature buff
+!?FU(OnAfterErmInstructions);
+!!SN:H^spell^/i^firevuln_spellReplaced^/0/s^firevuln_spellName^;
+
+
+// Create the array for storing temporary fire vulnerability for each stack
+!?FU(OnSetupBattlefield);
+!!SN:Mi^firevuln_stackFireVulnerabilities^;
+!!FU(NewIntArray):P42/?i^firevuln_stackFireVulnerabilities^/(M_TEMP);
+
+
+// Give fire vulnerability after melee attack (including retaliation)
+!?FU(firevuln_OnAfterMelee);
+!#VA(atkStack:x) (defStack:x);
+
+!!BM(atkStack):T?(atkMon:y);
+!!FU(firevuln_CheckIfMonIsEligible):P(atkMon)/?(isEligible:y);
+
+!!if&(isEligible);
+  !!BM(defStack):N?(num:y);
+  !!FU(firevuln_CheckIfMonIsImmune):P(defStack)/?(isImmune:y);
+
+  !!if&(num)>0/(isImmune)<>(TRUE);
+    !!SN:Vi^firevuln_stackFireVulnerabilities^/(defStack)/?(isFireVuln:y);
+
+    !!if&(isFireVuln)<>(TRUE);
+      ; Mark as fire vulnerable
+      !!SN:Vi^firevuln_stackFireVulnerabilities^/(defStack)/(TRUE);
+
+      ; Display cosmetics
+      !!if&i^battle_isVisible^;
+        ; Set cosmetic spell buff (Fire Ball)
+        ; Note: The bar for displaying creature number would become yellow (instead of red)
+        !!BM(defStack):Mi^firevuln_spellReplaced^/1000/(SKILL_NOT_LEARNED);
+        ; Show battle log
+        !!BM(defStack):T?(defMon:y);
+        !!VR(isPlural:y):S(num) -1 B;
+        !!SN:H^monname^/(defMon)/(isPlural)/?z1;
+        !!VRz2:Ss^firevuln_battleLog_%(isPlural)^;
+        !!VRz3:S^%z1%z2^;
+        !!MM:Sz3;
+        ; Play sound
+        !!SN:P^Poison^;
+        ; Play animation
+        !!BM(defStack):V14;
+      !!en;
+    !!en;
+  !!en;
+!!en;
+
+!?FU(firevuln_CheckIfMonIsEligible);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+!!VR(result)&(mon)=i^firevuln_dealer^:S(TRUE);
+
+!?FU(firevuln_CheckIfMonIsImmune);
+!#VA(stack:x) (result:x);
+
+!!VR(result):S(FALSE);
+
+!!BM(stack):T?(mon:y);
+
+; Set Water/Ice Elemental or monster with Fire Immunity to immune to this fire vulnerability
+!!if|(mon)=(MON_WATER_ELEMENTAL)/(mon)=(MON_ICE_ELEMENTAL);
+  !!VR(result):S(TRUE);
+; Fire Immunity is also immune to this ability
+!!el;
+  !!BM(stack):F?(monFlags:y);
+  !!VR(isFireImmune:y):S(monFlags) &(MON_FLAG_FIRE_IMMUNITY);
+  !!VR(result)&(isFireImmune):S(TRUE);
+!!en;
+
+
+// Calculate new fire damage
+!?FU(OnMagicCorrectedResistance);
+!!MR:S?(spell:y);
+!!SS(spell):S?(schoolBits:y);
+!!VR(isFireSpell:y):S(schoolBits) &2 B;
+
+!!if&(isFireSpell);
+  !!MR:N?(stack:y);
+  !!SN:Vi^firevuln_stackFireVulnerabilities^/(stack)/?(isFireVuln:y);
+
+  !!MR&(isFireVuln):Fd*2;
+!!en;
+
+
+// Clear temporary fire vulnerability on every stack turn for dead stacks - this is to make sure every destroyed stack are revived with fire vulnerability flag removed
+; Not compatible with monster reviving between stack turns. For example, Phoenix with reborn activated (although Phoenixes are not affected by this ability at all)
+// Set fire vulnerable buff on the vulnerabie stack in case the buff was removed or updated for some reason
+!?FU(OnBattleActionEnd)&i^battle_turn^>=0;
+!!re i/(BATTLE_STACK_FIRST)/(BATTLE_STACK_LAST);
+  !!BMi:T?(mon:y) N?(num:y);
+
+  !!if&(mon)>(NO_MON);
+    ; Remove fire vulnerable flag from the dead stack
+    !!if&(num)<=0;
+      !!SN:Vi^firevuln_stackFireVulnerabilities^/i/(FALSE);
+    ; Set spell buff on the stack if the buff was updated (removed) for some reason
+    !!el&i^battle_isVisible^;
+      !!SN:Mi^firevuln_stackFireVulnerabilities^/i/?(isFireVuln:y);
+
+      !!if&(isFireVuln);
+        !!BMi:Gi^firevuln_spellReplaced^/?(duration:y)/?(level:y);
+
+        !!if&(duration)<>1000;
+          ; If the buff is not even there
+          !!if&(duration)<=0;
+            !!BMi:Mi^firevuln_spellReplaced^/1000/(SKILL_NOT_LEARNED);
+          ; If the buff is there but with different duration
+          !!el;
+            !!BMi:Gi^firevuln_spellReplaced^/1000/(SKILL_NOT_LEARNED);
+          !!en;
+        !!en;
+      !!en;
+    !!en;
+  !!en;
+!!en;
