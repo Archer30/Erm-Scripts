@@ -1,0 +1,255 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+
+
+; Casting on constructs to revive them. 
+; Don't forget to add spells to the units with this ability
+
+
+; ========================== TESTING ==========================
+!?FU(OnAfterErmInstructions);
+!!MA:B(MON_MASTER_GREMLIN)/1;
+; ======================== END TESTING ========================
+
+!?FU(dal_GetMonMendingPower);
+; Mending power = hp to revive of each unit.
+!#VA(mon:x) (result:x);
+
+!!VR(result):S0;
+; ========================== TESTING ==========================
+!!VR(result)&(mon)=(MON_MASTER_GREMLIN):S5;
+; ======================== END TESTING ========================
+
+!?FU(dal_CheckIfMonIsConstruct);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+; ========================== TESTING ==========================
+!!VR(result)|(mon)=(MON_STONE_GOLEM)/(mon)=(MON_IRON_GOLEM)/(mon)=(MON_GOLD_GOLEM)/(mon)=(MON_DIAMOND_GOLEM):S(TRUE);
+!!VR(result)|(mon)=(MON_STONE_GARGOYLE)/(mon)=(MON_OBSIDIAN_GARGOYLE):S(TRUE);
+!!VR(result)&(mon)>=(MON_CATAPULT)/(mon)<=(MON_AMMO_CART):S(TRUE);
+; ======================== END TESTING ========================
+
+
+// Master Gremlins' Mend
+; Resurrect constructs
+; Change the cursor to casting when a target is not full comparing with its initial status
+!?FU(OnBattleMouseHint)&i^mouse_battleHex^>=1/i^mouse_battleHex^<=185;
+!!BU:Ei^mouse_battleHex^/?(targetStack:y); check monster position
+; Check again for bodies if there is no living stack at the position
+!!BU&(targetStack)=(NO_STACK):Di^mouse_battleHex^/?(targetStack);
+; Exit if no monster
+!!FU&(targetStack)=(NO_STACK):E;
+!!FU&(targetStack)=i^battle_current_stack^:E;
+
+!!BM(targetStack):I?(side:y);
+!!FU&(side)<>i^battle_current_side^:E;
+
+!!BMi^battle_current_stack^E?(spells:y);
+!!FU&(spells)=0:E;
+
+!!BM(targetStack):N?(targetNum:y) B?(targetInitNum:y);
+!!FU&(targetNum)>=(targetInitNum):E;
+
+; Check if the target is wide only when it's dead (assuming that's the only case two stacks in the some hex)
+!!if&(targetNum)<=0;
+  !!BM(targetStack):F?(flags:y);
+  !!VR(isWide:y):S(flags) &(MON_FLAG_WIDE);
+
+  !!if&(isWide);
+    !!BM(targetStack):P?(pos:y);
+    !!BU:E(pos)/?(stack:y);
+    !!FU&(stack)>(NO_STACK):E;
+
+    !!if&(side)=(BATTLE_LEFT);
+      !!VR(secPos:y):S(pos) +1;
+    !!el;
+      !!VR(secPos):S(pos) -1;
+    !!en;
+
+    !!BU:E(secPos)/?(stack);
+    !!FU&(stack)>(NO_STACK):E;
+  !!en;
+!!en;
+
+!!BMi^battle_current_stack^:T?(currType:y);
+!!FU(dal_GetMonMendingPower):P(currType)/?(mendPower:y);
+
+; If it is a mender
+!!if&(mendPower)>0;
+  ; Check if the target is a construct
+  !!BM(targetStack):T?(targetType:y);
+  !!FU(dal_CheckIfMonIsConstruct):P(targetType)/?(isConstruct:y);
+
+  ; If not a construct, exit
+  !!if&(isConstruct)=(FALSE);
+    !!MM:M^%T(dal.str.mendNotConstruct)^;
+  ; If is a contruct
+  !!el;
+    ; Get the total mending power
+    !!BMi^battle_current_stack^:N?(currNum:y);
+    !!VR(totalMendPower:y):S(currNum) *(mendPower);
+    !!BM(targetStack):H?(hp:y);
+
+    !!VR(targetIsPlural:y):S(targetInitNum) -1 B;
+    !!BM(targetStack):T?(targetType:y);
+    !!SN:H^monname^/(targetType)/(targetIsPlural)/?(targetMonName:z);
+
+    !!if&(totalMendPower)>=(hp);
+      !!UN:R5/3/0;
+
+      !!BM(targetStack):L?(lostHp:y);
+      !!VR(leftMendPower:y):S(totalMendPower) -(lostHp);
+      !!VR(maxRevive:y):S(targetInitNum) -(targetNum);
+      !!VR(numRevive:y):S(leftMendPower) :(hp) +1 F1/(maxRevive);
+      !!SN:T^dal.str.mendMain^/?(hint:z)/^num^/(numRevive)/^mon^/(targetMonName);
+      !!MM:M(hint);
+    !!el;
+      !!VR(currIsPlural:y):S(currNum) -1 B;
+      !!BMi^battle_current_stack^:T?(currType:y);
+      !!SN:H^monname^/(currType)/(currIsPlural)/?(currMonName:z);
+      !!VR(targetIsPlural:y):S(targetInitNum) -1 B;
+      !!BM(targetStack):T?(targetType:y);
+      !!SN:H^monname^/(targetType)/(targetIsPlural)/?(targetMonName:z);
+      !!SN:T^dal.str.mendNotEnough%(currIsPlural)^/?(hint)/^currMon^/(currMonName)/^targetMon^/(targetMonName);
+      !!MM:M(hint);
+    !!en;
+  !!en;
+!!en;
+
+!?FU(OnBattleScreenMouseClick)&i^mouse_action^=(MOUSE_LMB_PRESSED)/i^mouse_battleHex^>=1/i^mouse_battleHex^<=185;
+!!BU:Ei^mouse_battleHex^/?(targetStack:y); check monster position
+; Check again for bodies if there is no living stack at the position
+!!BU&(targetStack)=(NO_STACK):Di^mouse_battleHex^/?(targetStack);
+; Exit if no monster
+!!FU&(targetStack)=(NO_STACK):E;
+!!FU&(targetStack)=i^battle_current_stack^:E;
+
+!!BM(targetStack):I?(side:y);
+!!FU&(side)<>i^battle_current_side^:E;
+
+!!BMi^battle_current_stack^E?(spells:y);
+!!FU&(spells)=0:E;
+
+!!BM(targetStack):N?(targetNum:y) B?(targetInitNum:y);
+!!FU&(targetNum)>=(targetInitNum):E;
+
+; Check if the target is wide only when it's dead (assuming that's the only case two stacks in the some hex)
+!!if&(targetNum)<=0;
+  !!BM(targetStack):F?(flags:y);
+  !!VR(isWide:y):S(flags) &(MON_FLAG_WIDE);
+
+  !!if&(isWide);
+    !!BM(targetStack):P?(pos:y);
+    !!BU:E(pos)/?(stack:y);
+    !!FU&(stack)>(NO_STACK):E;
+
+    !!if&(side)=(BATTLE_LEFT);
+      !!VR(secPos:y):S(pos) +1;
+    !!el;
+      !!VR(secPos):S(pos) -1;
+    !!en;
+
+    !!BU:E(secPos)/?(stack);
+    !!FU&(stack)>(NO_STACK):E;
+  !!en;
+!!en;
+
+!!BMi^battle_current_stack^:T?(currType:y);
+!!FU(dal_GetMonMendingPower):P(currType)/?(mendPower:y);
+
+; If it is a mender
+!!if&(mendPower)>0;
+  ; Check if the target is a construct
+  !!BM(targetStack):T?(targetType:y);
+  !!FU(dal_CheckIfMonIsConstruct):P(targetType)/?(isConstruct:y);
+  !!FU&(isConstruct)<>(TRUE):E;
+
+  ; Get the total mending power
+  !!BMi^battle_current_stack^:N?(currNum:y);
+  !!VR(totalMendPower:y):S(currNum) *(mendPower);
+  !!BM(targetStack):H?(hp:y);
+
+  !!if&(totalMendPower)>=(hp);  
+    !!BM(targetStack):P?(targetPos:y);
+
+    ; Pass the turn
+    !!BG:D(targetPos) E(targetStack);_
+    !!BG:A(BATTLE_ACTION_MONSTER_CAST);
+
+    ; Play the casting animation manually
+    !!BMi^battle_current_stack^:P?(currPos:y);
+    !!VR(currY:y):S(currPos) :17;
+    !!VR(targetY:y):S(targetPos) :17;
+
+    !!if&(currY)<(targetY);
+      !!VR(group:y):S11;
+    !!el&(currY)=(targetY);
+      !!VR(group):S12;
+    !!el;
+      !!VR(group):S13;
+    !!en;
+
+    !!BMi^battle_current_stack^:Z?(stackStruct:y);
+    !!FU(dal_BattleStack_PlayAnimation):P(stackStruct)/(group)/(FALSE);
+
+    ; Restore the cursor to default
+    !!CM:R0;
+    !!UN:R5/0/0;
+
+    ; Sound
+    !!SN:P^resurect^;
+    ; Animation
+    *!FU(dal_playCustomAnimationOnStack):P^mend.def^/(targetStack)/1;
+    !!BM(targetStack):V50;
+
+    ; If the stack has been killed completely
+    !!if&(targetNum)<=0;
+      !!FU(dal_ResurrectedDeadStack):P(targetStack)/(totalMendPower);
+      !!BM(targetStack):N?(numRevive:y);
+    ; If the stack is still alive
+    !!el;
+      ; Get the total amount of lost HP
+      !!BM(targetStack):L?(lostHp:y);
+      !!VR(totalLostHp:y):S(targetInitNum) -(targetNum) *(hp) +(lostHp);
+
+      ; If total mending power is greater than the total lost, fully regenerate the target
+      !!if&(totalMendPower)>=(totalLostHp);
+        !!BM(targetStack):N(targetInitNum) L0;
+        !!VR(numRevive):S(targetInitNum) -(targetNum);
+      ; If not full, here comes the three situations
+      !!el;
+        ; Regenerate some HP and revive one
+        !!if&(totalMendPower)=(lostHp);
+          !!BM(targetStack):L0;
+          !!VR(numRevive):S1;
+        ; Rengenerate some HP and revive more
+        !!el;
+          !!VR(leftMendPower:y):S(totalMendPower) -(lostHp);
+
+          !!VR(numRevive:y):S(totalMendPower) :(hp);
+          !!VR(leftMendPower):S(totalMendPower) %(hp);
+          !!VR(leftMendPower): -(lostHp);
+          !!VR(lostHpNew:y):S(hp) -(leftMendPower);
+          !!BM(targetStack):L(lostHpNew);
+        !!en;
+
+        !!BM(targetStack):Nd(numRevive);
+      !!en;
+    !!en;
+
+    ; Reduce the spell number of the mender
+    !!VR(spells):-1;
+    !!BMi^battle_current_stack^:E(spells);
+
+    ; Battle log
+    !!VR(isPlural:y):S(numRevive) -1 B;
+    !!SN:H^monname^/(targetType)/(isPlural)/?(monName:z);
+    !!SN:T^dal.str.mend%(isPlural)^/?(battleLog:z)/^num^/(numRevive)/^mon^/(monName);
+    !!MM:S(battleLog);
+
+    ; Change the cursor to question mark
+    !!UN&(spells)=0:R5/2/5;
+  !!en;
+!!en;

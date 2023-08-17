@@ -8,7 +8,7 @@ ZVSE2
 ; The damage dealing to wide unit is 50% of the normal damage (as wide unit is usually tankier)
 
 
-!?FU(arch_CheckMonHasDamagingMovementDamage);
+!?FU(dal_CheckMonHasDamagingMovementDamage);
 !#VA(mon:x) (result:x);
 
 !!VR(result):S0;
@@ -16,14 +16,17 @@ ZVSE2
 !!VR(result)&(mon)=(MON_CENTAUR_CAPTAIN):S5;
 ; ======================== END TESTING ========================
 
-!?FU(arch_CreateERMHook);
-!!SN:Ex1/1/4464284/(arch_OnStackMakesStep); // hook in "while" loop of the walking stacks each HEX passed;
+!?FU(dal_CreateERMHook);
+!#VA(hook:x);
+
+!!SN:E(hook)/1/4464284/(dal_OnStackMakesStep); // hook in "while" loop of the walking stacks each HEX passed;
+!!SN:E(hook)/1/4463326/(dal_HOOK_BeforeStackAttackMelee); [Trigger right before melee attack, obviously before retaliation]
 
 ; Reset variables
 !?FU(OnSetupBattlefield);
-!!SN:Mi^arch_DamagingMovementPosList^;
-!!VRi^arch_DamagingMovementPosList^:S0;
-!!VRi^arch_DamagingMovementIsWide^:S0;
+!!SN:Mi^dal_DamagingMovementPosList^;
+!!VRi^dal_DamagingMovementPosList^:S0;
+!!VRi^dal_DamagingMovementIsWide^:S0;
 
 ; Set up an array at the start of moving
 !?FU(OnBeforeBattleAction);
@@ -31,19 +34,19 @@ ZVSE2
 
 !!if|(action)=(BATTLE_ACTION_WALK)/(action)=(BATTLE_ACTION_WALK_AND_ATTACK);
   !!BMi^battle_acting_stack^:T?(type:y);
-  !!FU(arch_CheckMonHasDamagingMovementDamage):P(type)/?(result:y);
+  !!FU(dal_CheckMonHasDamagingMovementDamage):P(type)/?(result:y);
 
   !!if&(result)>0;
     !!BMi^battle_acting_stack^:F?(flags:y);
-    !!VRi^arch_DamagingMovementIsWide^:S(flags) &(MON_FLAG_WIDE) B;
+    !!VRi^dal_DamagingMovementIsWide^:S(flags) &(MON_FLAG_WIDE) B;
 
-    !!SN:Mi^arch_DamagingMovementPosList^;
-    !!FU(NewIntArray):P?i^arch_DamagingMovementPosList^/(M_TEMP);
+    !!SN:Mi^dal_DamagingMovementPosList^;
+    !!FU(NewIntArray):P?i^dal_DamagingMovementPosList^/(M_TEMP);
   !!en;
 !!en;
 
 ; Store every coordinates the caster passes by
-!?FU(arch_OnStackMakesStep)&i^arch_DamagingMovementPosList^;
+!?FU(dal_OnStackMakesStep)&i^dal_DamagingMovementPosList^;
 !#VA(hook:x);
 
 !!UN:C(hook:x)/(STRUCT_HOOK_CONTEXT_EAX)/4/?(hexToGo:y);
@@ -59,40 +62,50 @@ ZVSE2
 !!VR(stackId:y):S(side) *(BATTLE_STACKS_PER_SIDE) +(sId);
 !!BM(stackId):P?(pos:y);
 
-!!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+!!FU(Array_Push):Pi^dal_DamagingMovementPosList^/(pos);
 
 ; Deal with wide units
-!!if&i^arch_DamagingMovementIsWide^;
+!!if&i^dal_DamagingMovementIsWide^;
   !!if&i^battle_acting_side^=(BATTLE_LEFT);
     !!VR(pos):+1;
   !!el;
     !!VR(pos):-1;
   !!en;
 
-  !!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+  !!FU(Array_Push):Pi^dal_DamagingMovementPosList^/(pos);
 !!en;
 
 ; Check if any stack is adjacent to the movement path
-!?FU(OnBattleActionEnd)&i^arch_DamagingMovementPosList^;
+; Walk
+!?FU(OnBattleActionEnd)&i^dal_DamagingMovementPosList^;
+!!BG:A?(action:y);
+!!FU(dal_damagineMovementMain)&(action)=(BATTLE_ACTION_WALK):P;
+
+; Walk and attack
+4463326
+!?FU(dal_HOOK_BeforeStackAttackMelee)&i^dal_DamagingMovementPosList^;
+!!FU(dal_damagineMovementMain):P;
+
+!?FU(dal_damagineMovementMain);
 !!BMi^battle_acting_stack^:N?(num:y);
 
 !!if&(num)>0;
   !!BMi^battle_acting_stack^:P?(pos:y);
-  !!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+  !!FU(Array_Push):Pi^dal_DamagingMovementPosList^/(pos);
 
   ; Deal with wide units
-  !!if&i^arch_DamagingMovementIsWide^;
+  !!if&i^dal_DamagingMovementIsWide^;
     !!if&i^battle_acting_side^=(BATTLE_LEFT);
       !!VR(pos):+1;
     !!el;
       !!VR(pos):-1;
     !!en;
 
-    !!FU(Array_Push):Pi^arch_DamagingMovementPosList^/(pos);
+    !!FU(Array_Push):Pi^dal_DamagingMovementPosList^/(pos);
   !!en;
 
-  !!FU(Array_SortedUnique):Pi^arch_DamagingMovementPosList^;
-  !!SN:Mi^arch_DamagingMovementPosList^/?(size:y);
+  !!FU(Array_SortedUnique):Pi^dal_DamagingMovementPosList^;
+  !!SN:Mi^dal_DamagingMovementPosList^/?(size:y);
 
   !!if&(size)>0;
     !!FU(NewIntArray):P?(affectedStacksList:y);
@@ -100,7 +113,7 @@ ZVSE2
 
     !!re i/0/(size)/1/-1;
       ; Check the adjacent hexes of every hexes the caster walked through
-      !!SN:Mi^arch_DamagingMovementPosList^/i/?(pos:y);
+      !!SN:Mi^dal_DamagingMovementPosList^/i/?(pos:y);
       !!VR(isOddRow:y):S(pos) :17 %2;
 
       !!VR(firstPos:y)&(isOddRow):S(pos) -17;
@@ -136,9 +149,9 @@ ZVSE2
     !!if&(size)>0;
       ; Get the damage would be done by the damaging movement unit
       !!BMi^battle_acting_stack^:T?(type:y) N?(actNum:y);
-      !!FU(arch_CheckMonHasDamagingMovementDamage):P(type)/?(damage:y); [Get the damage per unit of the unit just moved]
+      !!FU(dal_CheckMonHasDamagingMovementDamage):P(type)/?(damage:y); [Get the damage per unit of the unit just moved]
       !!VR(normDamage:y):S(damage) *(actNum); [Damage for single hex unit]
-      !!VR(wideDamage:y):S(normDamage) :2 F1/(INT_MAX); [Damage for wide unit (1/2)]
+      !!VR(wideDamage:y):S(normDamage) :2; [1/2 damage to wide units]
 
       ; Initialise the variable for checking whether damage is inclicted to at least one unit
       !!VR(damageInflicted:y)&i^battle_isVisible^:S(FALSE);
@@ -152,7 +165,7 @@ ZVSE2
         !!BM(targetStack):F?(flags:y);
         !!VR(isFlyer:y):S(flags) &(MON_FLAG_FLYER);
         !!co&(isFlyer);                 [Flying units are not affected]
-
+        
         !!VR(damageInflicted)&i^battle_isVisible^:S(TRUE);
 
         ; Different damage depending on whether the target is wide
@@ -166,10 +179,12 @@ ZVSE2
       !!en;
 
       !!if&i^battle_isVisible^/(damageInflicted);
+        !!SN:D;
+
         ; Battle log
         !!VR(isPlural:y):S(num) -1 B;
         !!SN:H^monname^/(type)/(isPlural)/?(monName:z);
-        !!SN:T^dal.str.damagingMovement%(isPlural)^/?(battleLog:z)/^mon^/(monName);
+        !!SN:T^dal.str.damagingMovement%(isPlural)^/?(battleLog:z)/^mon^/(monName)/^dmg^/(normDamage);
         !!MM:S(battleLog);
       !!en;
     !!en;
@@ -177,6 +192,6 @@ ZVSE2
 !!en;
 
 ; Release the array and variables
-!!SN:Mi^arch_DamagingMovementPosList^;
-!!VRi^arch_DamagingMovementPosList^:S0;
-!!VRi^arch_DamagingMovementIsWide^:S0;
+!!SN:Mi^dal_DamagingMovementPosList^;
+!!VRi^dal_DamagingMovementPosList^:S0;
+!!VRi^dal_DamagingMovementIsWide^:S0;
