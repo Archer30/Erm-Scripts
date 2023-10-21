@@ -1,0 +1,32 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.9+, Era Erm Framework
+
+; Makes all the encounter stacks for human players become R10
+
+
+!?FU(OnGameEnter);
+!!UN:P(WOG_OPT_STACK_EXPERIENCE)/?(stackExp:y);
+!!FU&(stackExp)<>(TRUE):E;
+
+!!SN:L^erm_hooker.era^/?(hooker:y);
+!!FU&(hooker)=0:E;
+
+!!SN:A(hooker)/^SetHook^/?(hookingFuncAddress:y);
+!!SN:E(hookingFuncAddress)/1/4445639/(exp_AfterStackInitParams);
+
+!?FU(exp_AfterStackInitParams);
+!#VA(hook:x);
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_EBX)/4/?(stackStruct:y) C(stackStruct)/244/(UNC_INT)/?(side:y) C(stackStruct)/248/(UNC_INT)/?(stackPerSide:y);
+!!VR(stackId:y):S(side) *(BATTLE_STACKS_PER_SIDE) +(stackPerSide);
+!!FU(exp_InitParams):P(stackId)/(side);
+
+!?FU(exp_InitParams);
+!#VA(stackId:x) (side:x);
+
+!!FU&i^battle_human_%(side)^:E;
+
+!!VR(eaStack:y):S(stackId) +1 *-1;
+!!EA(eaStack):E10/12/d/d;

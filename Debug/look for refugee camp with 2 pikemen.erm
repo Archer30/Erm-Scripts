@@ -1,0 +1,37 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Find the refugee camp with 2 Pikemen in it.
+
+
+!?FU(OnAfterErmInstructions);
+!!VRi^refug_x^:S-1;
+
+!?FU(OnKeyPressed_AdvMap)&i^key^=(KEY_1);
+!!VRx2:S(TRUE);
+
+; loop through all the refugee camps
+!!re i;
+  !!UN:U(OBJ_REFUGEE_CAMP)/(MON_PIKEMAN)/-1/i^refug_x^/i^refug_y^/i^refug_z^;
+
+  ; Break the loop if nothing else found
+  ; Here we don't need to set i^refug_x^ to -1 as it's been set when nothing found, by UN:U
+  !!if&i^refug_x^<0;
+    !!IF:M^Loop Completed!^;
+
+    !!br;
+  !!en;
+
+  ; Break the loop and show msg if a refugee camp with 2 pikemen is found
+  !!OBi^refug_x^/i^refug_y^/i^refug_z^:C?(qty:y);
+
+  !!if&(qty)=2;
+    !!IF:M^Refugee with 2 Pikemen is found at %i(refug_x)/%i(refug_y)/%i(refug_z)^;
+    !!UN:Si^refug_x^/i^refug_y^/i^refug_z^/i^timerOwner^/2; [Open map]
+    !!UN:Li^refug_x^/i^refug_y^/i^refug_z^/1; [Move the view to the position]
+
+    !!br;
+  !!en;
+!!en;

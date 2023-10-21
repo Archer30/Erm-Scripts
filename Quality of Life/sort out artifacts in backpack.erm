@@ -1,0 +1,49 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Sort out artifacts in backpack by artifact IDs by pressing "S" from hero screen or hero meeting screen
+
+
+!?FU(OnKeyPressed_HeroScreen)&i^key^=(KEY_S);
+!#VA(key:x) (preventDefault:x);
+
+!!VR(preventDefault):S(TRUE);
+
+!!FU(arch_SortOutArtsInBackpack):P(CURRENT_HERO);
+
+!?FU(OnKeyPressed_HeroMeetingScreen)&i^key^=(KEY_S);
+!#VA(key:x) (preventDefault:x);
+
+!!VR(preventDefault):S(TRUE);
+
+!!CM:H?(leftHero:y)/?(rightHero:y);
+!!FU(arch_SortOutArtsInBackpack):P(leftHero) P(rightHero);
+
+!?FU(arch_SortOutArtsInBackpack);
+!#VA(hero:x);
+
+!!FU(NewIntArray):P?(artsInBackpackList:y);
+
+!!re i/(ART_SLOT_BACKPACK_FIRST)/(ART_SLOT_BACKPACK_LAST);
+  !!HE(hero):A1/?(art:y)/i;
+
+  !!if&(art)>(NO_ART);
+    !!FU(Array_Push):P(artsInBackpackList)/(art);
+    !!HE(hero):A3/(art)/1/(FALSE);
+  !!en;
+!!en;
+
+!!SN:M(artsInBackpackList)/?(size:y);
+
+!!if&(size)>0;
+  !!FU(Array_Sort):P(artsInBackpackList);
+
+  !!re i/0/(size)/1/-1;
+    !!SN:M(artsInBackpackList)/i/?(art);
+    !!HE(hero):A(art);
+  !!en;
+
+  !!SN:D;
+!!en;
