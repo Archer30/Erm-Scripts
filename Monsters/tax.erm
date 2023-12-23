@@ -1,0 +1,65 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Your creature pays tax to you.
+; Here we do not check garrisons and mines as they are not part of the native behaviour (Crystal Dragons's crystal generation)
+
+
+!?FU(tax_CheckIfMonPaysTax);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+; ========================== TESTING ==========================
+!!VR(result)&(mon)=(MON_PEASANT):S5;
+; ======================== END TESTING ========================
+
+
+!?FU(OnEveryDay);
+; Check for heroes
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  ; Skip if not the current player's hero
+  !!HEi:O?(owner:y);
+  !!co&(owner)<>i^timerOwner^;
+
+  ; Look for the tax payers
+  !!re (slot:y)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!HEi:C0/(slot)/?(mon:y)/?(qty:y);
+
+    !!if&(qty)>0;
+      !!FU(tax_CheckIfMonPaysTax):P(mon)/?(result:y);
+
+      ; Calculate the amount of tax and add to the owner
+      !!VR(bonusGoldHero:y)&(result):S(qty) *i^0_tax_amount^;
+    !!en;
+  !!en;
+!!en;
+
+; Check for towns
+!!re i;
+  !!UN:U(OBJ_TOWN)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
+  !!br&(x)<0;
+
+  ; Skip if not the current player's town
+  !!CA(x)/(y)/(z):O?(owner);
+  !!co&(owner)<>i^timerOwner^;
+
+  ; Look for tax payers
+  !!re (slot)/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+    !!CA(x)/(y)/(z):M2/(slot)/?(mon)/?(qty);
+
+    !!if&(qty)>0;
+      !!FU(tax_CheckIfMonPaysTax):P(mon)/?(result:y);
+
+      ; Calculate the amount of tax and add to the owner
+      !!VR(bonusGoldTown)&(result):S(qty) *i^0_tax_amount^;
+    !!en;
+  !!en;
+!!en;
+
+!!OW:Ri^timerOwner^/(RES_GOLD)/?(gold:y);
+!!VR(gold):+(bonusGoldHero) +(bonusGoldTown) +(bonusGoldGarrison);
+!!OW:Ri^timerOwner^/(RES_GOLD)/(gold);
+
+!!UN&(ERM_FLAG_IS_HUMAN):R2;

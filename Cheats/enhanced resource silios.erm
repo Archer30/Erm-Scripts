@@ -3,7 +3,7 @@ ZVSE2
 ; Engine:   ERM 2.0+
 ; Requires: ERA 3.3+, Era Erm Framework
 
-; Resource Silos now provide 1 wood/1 ore and 1 special resource accoding to types of towns.
+; Resource Silos now provide 1 wood/1 ore and 1 special resource depending on the types of towns.
 
 
 !?FU(OnEveryDay)&i^timerOnce^/i^timerDay^>1;
@@ -35,4 +35,4 @@ ZVSE2
   !!en;
 !!en;
 
-!!UN:R2;                                [refresh resouces bar]
+!!UN&(ERM_FLAG_IS_HUMAN):R2;            [refresh resouces bar]

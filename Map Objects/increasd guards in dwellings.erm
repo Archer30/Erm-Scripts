@@ -1,0 +1,45 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Increase the guards in dwellings. The number of guards are 3 times of the recruitable creatures (configurable)
+
+
+; ============== SETTINGS ==============
+!#VRi^dwg_timesOfGuards^:S3;
+; ============ END SETTINGS ============
+
+!?OB(OBJ_CREATURE_GENERATOR_1);
+!!FU(dwg_IncreaseGuards):P;
+
+!?OB(OBJ_CREATURE_GENERATOR_4);
+!!FU(dwg_IncreaseGuards):P;
+
+!?FU(dwg_IncreaseGuards);
+!!UN:C4949947/1/?(minGuardedLevel:y);   [Minimum level of recruitable creature with guards in dwellings]
+
+!!re i/0/3;
+  !!DW998:Mi/?(availType:y)/?(availNum:y);
+
+  !!if&(availType)>(NO_MON);
+    !!MA:L(availType)/?(level:y);
+
+    !!if&(level)>=(minGuardedLevel);
+      !!VR(availNum):*i^dwg_timesOfGuards^;
+      !!DW998:Gi/?(guardType:y)/?(guardNum:y);
+
+      !!if&(availType)>(NO_MON)/(availNum)>0;
+        !!VR(mustIncreaseGuards:y):S(FALSE);
+
+        !!if|(guardType)<=(NO_MON);
+          !!VR(mustIncreaseGuards):S(TRUE);
+        !!el&(guardType)=(availType)/(guardNum)<(availNum);
+          !!VR(mustIncreaseGuards):S(TRUE);
+        !!en;
+
+        !!DW998&(mustIncreaseGuards):Gi/(availType)/(availNum);
+      !!en;
+    !!en;
+  !!en;
+!!en;
