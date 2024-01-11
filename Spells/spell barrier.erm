@@ -1,0 +1,62 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; New Spell: Barrier. This spell prevents spell damage completly, yet every spell damage will reduce the duration of Barrier by 1.
+
+
+; ============== SETTINGS ==============
+!!VRi^barrier_spell^:S(SPELL_PROTECTION_FROM_WATER);
+; ============ END SETTINGS ============
+
+
+!?FU(OnGameEnter);
+!!SN:L^erm_hooker.era^/?(hooker:y);
+!!FU&(hooker)=0:E;
+
+!!SN:A(hooker)/^SetHook^/?(hookingFuncAddress:y);
+!!FU(barrier_CreateERMHook):P(hookingFuncAddress);
+
+!?FU(barrier_CreateERMHook);
+!#VA(address:x);
+
+!!SN:E(address)/1/5929971/(barrier_OnApplySpellDamage);
+!!SN:E(address)/1/4472240/(barrier_OnDoPhysicalDamage);
+
+!?FU(barrier_OnApplySpellDamage);
+!#VA(hook:x);
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_EBP)/4/?(ebp:y);
+!!UN:C(ebp)/24/4/?(stackStruct:y);
+
+!!UN:C(stackStruct)/244/(UNC_INT)/?(side:y);
+!!UN:C(stackStruct)/248/(UNC_INT)/?(stackOfSide:y);
+!!VR(stackId:y):S(side) *(BATTLE_STACKS_PER_SIDE) +(stackOfSide);
+
+!!VR(spell:y):Si^barrier_spell^;
+
+!!BM(stackId):G(spell)/?(duration:y)/?(level:y);
+
+; Don't inflict spell damage if condition met
+!!if&(duration)>0;                      [The duration is reduced by 1 if hit by damaing spell]
+  !!VR(duration):-1;                    
+
+  !!if&(duration)>0;
+    !!BM(stackId):G(spell)/(duration)/d;
+  !!el;
+    !!SN:E4473392/2/(stackStruct)/(spell);
+  !!en;
+
+  !!UN:C(hook)/(STRUCT_HOOK_CONTEXT_EAX)/4/0;
+  !!SN:X?t/0;
+  !!UN:C(hook)/(STRUCT_HOOK_CONTEXT_RET)/4/5930626; 
+  !!VRi^barrier_mustSkipSpellDamage^:S(TRUE);
+!!en;
+
+!?FU(barrier_OnDoPhysicalDamage)&i^barrier_mustSkipSpellDamage^;
+!#VA(hook:x);
+
+!!SN:X?t/0;
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_RET)/4/4472380;
+!!VRi^barrier_mustSkipSpellDamage^:S(FALSE);
