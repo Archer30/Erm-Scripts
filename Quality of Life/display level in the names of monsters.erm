@@ -1,0 +1,34 @@
+ZVSE2
+; Author:   Archer30
+; Idea:     Kongsuni
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Display level in the names of monsters
+; This could help you recongnise roughly how strong a monster is
+; Monsters with fight value bigger than Blood Dragons are considered Level 8
+
+
+!?FU(OnAfterErmInstructions);
+!!MA:F(MON_BLOOD_DRAGON)/?(bloodFv:y);
+!!FU(NewStrArray):P8/?(colourList:y);
+!!SN:V(colourList)/0/^Cornsilk^/^Cornsilk^/^Cornsilk^/^Cornsilk^/^Chocolate^/^CornflowerBlue^/^Crimson^/^BlueViolet^;
+!!FU(GetMaxMonsterId):P?(lastMon:y);
+
+!!re i/(MON_FIRST)/(lastMon);
+  !!MA:Li/?(level:y);
+  !!VR(realLevel:y):S(level) +1;
+
+  ; Fix for level 8 creatures
+  !!if&(level)=(MON_MAX_LEVEL);
+    !!MA:Fi/?(fv:y);
+    !!VR(realLevel)&(fv)>=(bloodFv):S8;
+  !!en;
+
+  !!SN:M(colourList)/(level)/?(colourStr:z);
+
+  !!re j/0/1;
+    !!SN:H^monname^/i/j/?(name:z);
+    !!SN:H^monname^/i/j/^%(name) {~%(colourStr)}(Lv %(realLevel)){~}^;
+  !!en;
+!!en;
