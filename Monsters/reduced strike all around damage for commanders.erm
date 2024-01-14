@@ -1,0 +1,74 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Commanders now deal reduced damage to secondary targets of their strike all around attacks
+; For the main target, the damage would still be 100%
+
+
+; ============== SETTINGS ==============
+!#VRi^redstrik_damagePercent^:S85;      [Percentage of damage commanders deal to secondary targets of their Strike all around attacks]
+; ============ END SETTINGS ============
+
+
+!?FU(OnMonsterPhysicalDamage);
+; Get the type of MF damage
+!!UN:C42149568/(UNC_INT)/?(dmgTypeValue:y);
+
+; 4456676 - Strike All (including main and secondary targets)
+!!if&(dmgTypeValue)=4456676;
+  ; Get the attacker/defender stack
+  !!MF:N?(defStack:y);
+  !!BG:E?(targetStack:y);
+  !!FU|(defStack)=(targetStack)/(defStack)=i^battle_acting_stack^:E; [exit if it is a process of calculating damage to the main target]
+
+  ; Check if it is a commander dealing damage
+  ; Here we assume the attacker with different side with the defender (MF:N) is the real attacker
+  !!BM(defStack):I?(defSide:y);
+
+  !!VR(attackers[2]:y):Ci^battle_acting_stack^/(targetStack);
+
+  !!re i/0/1;
+    !!FU(redstrik_GetActualStackSide):P(attackers[i])/?(actualSide:y);
+
+    !!if&(actualSide)<>(defSide);
+      !!VR(atkStack:y):S(attackers[i]);
+
+      !!br;
+    !!en;
+  !!en;
+
+  !!BM(atkStack):T?(atkType:y);
+
+  ; If it is a commander inflicing damage
+  !!if&(atkType)>=(MON_COMMANDER_FIRST_A)/(atkType)<=(MON_COMMANDER_LAST_D);
+    ; Calculate and the new damage based on basic damage
+    !!MF:D?(basicDmg:y);
+    !!VR(dmgReduced:y):S100 -i^redstrik_damagePercent^ *(basicDmg) :100;
+
+    !!if&(dmgReduced)>0;
+      !!MF:F?(finalDmg:y);
+      !!VR(newFinalDmg:y):S(finalDmg) -(dmgReduced);
+
+      ; Apply new damage if it was a valid change
+      !!if&(newFinalDmg)>0/(newFinalDmg)<(finalDmg);
+
+        *!BM(defStack):T?(defType:y);   [debug line]
+        *!IF:M^damage was reduced by %(dmgReduced) points to stack %(defStack) %(defType)^;
+
+        !!MF:F(newFinalDmg);
+      !!en;
+    !!en;
+  !!en;
+!!en;
+
+****************************************
+**** Get the actual side of a stack ****
+****************************************
+; The stack size would be reverted if the stack is hypnotized
+!?FU(redstrik_GetActualStackSide);
+!#VA(stack:x) (side:x);
+
+!!BM(stack):I?(side) G(SPELL_HYPNOTIZE)/?(hypnotizeTurns:y)/d;
+!!VR(side)&(hypnotizeTurns)>0:X(TRUE);
