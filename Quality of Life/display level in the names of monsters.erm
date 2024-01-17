@@ -11,11 +11,16 @@ ZVSE2
 
 !?FU(OnAfterErmInstructions);
 !!MA:F(MON_BLOOD_DRAGON)/?(bloodFv:y);
-!!FU(NewStrArray):P8/?(colourList:y);
-!!SN:V(colourList)/0/^Cornsilk^/^Cornsilk^/^Cornsilk^/^Cornsilk^/^Chocolate^/^CornflowerBlue^/^Crimson^/^BlueViolet^;
+!!FU(NewStrArray):P9/?(colourList:y);
+!!SN:V(colourList)/0/^^/^White^/^Green^/^Yellow^/^Tan^/^Orange^/^Red^/^Purple^/^Blue^;
 !!FU(GetMaxMonsterId):P?(lastMon:y);
 
 !!re i/(MON_FIRST)/(lastMon);
+  !!co|i=(MON_NOT_USED_1)/i=(MON_NOT_USED_2)/i=(MON_NOT_USED_3)/i=(MON_NOT_USED_4);
+  !!co&i>=(MON_CATAPULT)/i<=(MON_ARROW_TOWERS);
+  !!co&i>=(MON_EMISSARY_OF_WAR)/i<=(MON_EMISSARY_OF_LORE);
+  !!co&i>=(MON_COMMANDER_FIRST_A)/i<=(MON_COMMANDER_LAST_D);
+
   !!MA:Li/?(level:y);
   !!VR(realLevel:y):S(level) +1;
 
@@ -25,7 +30,7 @@ ZVSE2
     !!VR(realLevel)&(fv)>=(bloodFv):S8;
   !!en;
 
-  !!SN:M(colourList)/(level)/?(colourStr:z);
+  !!SN:M(colourList)/(realLevel)/?(colourStr:z);
 
   !!re j/0/1;
     !!SN:H^monname^/i/j/?(name:z);
