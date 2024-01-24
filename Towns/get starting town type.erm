@@ -1,0 +1,15 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Function to get the starting town type of a player
+
+
+!?FU(town_GetStartingTownType);
+!#VA(player:x);                         [0-7]
+!#VA(townType:x);                       [0-8]
+
+!!UN:C(GAME_MANAGER)/(UNC_INT)/?(gameMgr:y);
+!!VR(offset:y):S(player) *4 +128688;
+!!UN:C(gameMgr)/(offset)/(UNC_INT8)/?(townType);
