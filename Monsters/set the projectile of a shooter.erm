@@ -1,0 +1,35 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Set the projectile index of a shooter
+
+
+!?FU(proj_SetShooterProjectile);
+!#VA(mon:x);                            [ID of creature]
+!#VA(projInd:x);                        [0~15]
+; 0 Monk
+; 1 Archer
+; 2 Wood Elf
+; 3 Master Gremlin
+; 4 Mage
+; 5 Titan (Storm Elemental)
+; 6 Gog
+; 7 Lich
+; 8 Medusa
+; 9 Orc
+; 10 Cyclops
+; 11 Lizardman
+; 12 Ice Elemental
+; 13 Halfling
+; 14 Catapult
+; 15 Ballista
+
+!!VR(address:y):S(mon) +7994814;
+!!UN:C(address)/(UNC_INT8)/(projInd);
+
+; ========================== TESTING ==========================
+
+!?FU(OnGameEnter);
+!!FU(proj_SetShooterProjectile):P(MON_MAGE)/6;
