@@ -1,0 +1,55 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Genies destroy half the enemy troops!
+
+
+!?FU(h2r_CheckMonDestroyDetails);
+!#VA(mon:x) (chance:x) (percent:x);
+
+!!VR(chance):S0;
+!!VR(percent):S0;
+
+!!if&(mon)=(MON_MASTER_GENIE);
+  !!VR(chance):S10;                     [0 - 100]
+  !!VR(percent):S50;                    [0 - 100]
+!!en;
+
+!?FU(OnStackToStackDamage_Quit);
+!#VA(atkStack:x) (defStack:x) (finalDmgConst:x) (finalDmg:x) (basicDmg:x) (dmgBonus:x) (isDistant:x) (distanceArg:x) (isTheoretical:x);
+
+; Real damage calculation only
+!!FU&(isTheoretical):E;
+
+; final damge > 0 only (not blocked by blocking scripts)
+!!FU&(finalDmg)<=0:E;
+
+; Exit if the attacker cannot destroy
+!!BM(atkStack):T?(type:y);
+!!FU(h2r_CheckMonDestroyDetails):P(type)/?(chance:y)/?(percent:y);
+!!FU&(chance)=0:E;
+
+; Exit if not lucky
+!!VR(random:y):R0/99;
+!!FU&(random)>=(chance):E;
+
+; Get the total hp of the victim
+!!BM(defStack):N?(defNum:y) H?(hp:y) L?(lostHp:y);
+!!VR(totlaHp:y):S(hp) *(defNum) -(lostHp);
+
+; Get the hp to be taken
+!!VR(destroyDmg:y):S(totlaHp) *(percent) :100;
+
+!!if&(destroyDmg)>(hp)/(finalDmg)<(destroyDmg);
+  !!if&i^battle_isVisible^;
+    !!BM(atkStack):N?(atkNum:y) T?(atkMon:y);
+    !!VR(isPlural:y):S(atkNum) -1 B;
+    !!SN:H^monname^/(atkMon)/(isPlural)/?(atkMonName:z);
+    !!SN:T^h2r.str.destroy%(isPlural)^/?(battleLog:z)/^mon^/(atkMonName);
+    !!MM:S(battleLog);
+  !!en;
+
+  !!VR(finalDmg):S(destroyDmg);
+!!en;

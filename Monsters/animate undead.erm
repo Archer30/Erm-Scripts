@@ -3,37 +3,26 @@ ZVSE2
 ; Engine:   ERM 2.0+
 ; Requires: ERA 3.0+
 
-; Casting on constructs to revive them. 
+; Casting on Undead to revive them. 
 ; Don't forget to add spells to the units with this ability
 
 
 ; ========================== TESTING ==========================
 !?FU(OnAfterErmInstructions);
-!!MA:B(MON_MASTER_GREMLIN)/1;
+!!MA:B(MON_POWER_LICH)/1;
 ; ======================== END TESTING ========================
 
-!?FU(dal_GetMonMendingPower);
-; Mending power = hp to revive of each unit.
+!?FU(dal_GetMonAnimateUndeadPower);
+; Animating power = hp to revive of each unit.
 !#VA(mon:x) (result:x);
 
 !!VR(result):S0;
 ; ========================== TESTING ==========================
-!!VR(result)&(mon)=(MON_MASTER_GREMLIN):S5;
-; ======================== END TESTING ========================
-
-!?FU(dal_CheckIfMonIsConstruct);
-!#VA(mon:x) (result:x);
-
-!!VR(result):S(FALSE);
-; ========================== TESTING ==========================
-!!VR(result)|(mon)=(MON_STONE_GOLEM)/(mon)=(MON_IRON_GOLEM)/(mon)=(MON_GOLD_GOLEM)/(mon)=(MON_DIAMOND_GOLEM):S(TRUE);
-!!VR(result)|(mon)=(MON_STONE_GARGOYLE)/(mon)=(MON_OBSIDIAN_GARGOYLE):S(TRUE);
-!!VR(result)&(mon)>=(MON_CATAPULT)/(mon)<=(MON_AMMO_CART):S(TRUE);
+!!VR(result)&(mon)=(MON_POWER_LICH):S10;
 ; ======================== END TESTING ========================
 
 
-// Master Gremlins' Mend
-; Resurrect constructs
+; Resurrect Undead
 ; Change the cursor to casting when a target is not full comparing with its initial status
 !?FU(OnBattleMouseHint)&i^mouse_battleHex^>=1/i^mouse_battleHex^<=185;
 !!BU:Ei^mouse_battleHex^/?(targetStack:y); check monster position
@@ -74,45 +63,42 @@ ZVSE2
 !!en;
 
 !!BMi^battle_current_stack^:T?(currType:y);
-!!FU(dal_GetMonMendingPower):P(currType)/?(mendPower:y);
+!!FU(dal_GetMonAnimateUndeadPower):P(currType)/?(animatePower:y);
 
-; If it is a mender
-!!if&(mendPower)>0;
-  ; Check if the target is a construct
-  !!BM(targetStack):T?(targetType:y);
-  !!FU(dal_CheckIfMonIsConstruct):P(targetType)/?(isConstruct:y);
+; If it is a necromancer
+!!if&(animatePower)>0;
+  ; Check if the target is undead
+  !!BM(targetStack):F?(flags:y);
+  !!VR(isUndead:y):S(flags) &(MON_FLAG_UNDEAD);
 
-  ; If not a construct, exit
-  !!if&(isConstruct)=(FALSE);
-    !!MM:M^%T(dal.str.mendNotConstruct)^;
-  ; If is a contruct
+  ; If is not undead
+  !!if&(isUndead)=0;
+    !!MM:M^%T(dal.str.animateNotUndead)^;
+  ; If is undead
   !!el;
-    ; Get the total mending power
+    ; Get the total animating power
     !!BMi^battle_current_stack^:N?(currNum:y);
-    !!VR(totalMendPower:y):S(currNum) *(mendPower);
+    !!VR(totalAnimatePower:y):S(currNum) *(animatePower);
     !!BM(targetStack):H?(hp:y);
 
     !!VR(targetIsPlural:y):S(targetInitNum) -1 B;
     !!BM(targetStack):T?(targetType:y);
     !!SN:H^monname^/(targetType)/(targetIsPlural)/?(targetMonName:z);
 
-    !!if&(totalMendPower)>=(hp);
+    !!if&(totalAnimatePower)>=(hp);
       !!UN:R5/3/0;
 
       !!BM(targetStack):L?(lostHp:y);
-      !!VR(leftMendPower:y):S(totalMendPower) -(lostHp);
+      !!VR(leftAnimatePower:y):S(totalAnimatePower) -(lostHp);
       !!VR(maxRevive:y):S(targetInitNum) -(targetNum);
-      !!VR(numRevive:y):S(leftMendPower) :(hp) +1 F1/(maxRevive);
-      !!SN:T^dal.str.mendMain^/?(hint:z)/^num^/(numRevive)/^mon^/(targetMonName);
+      !!VR(numRevive:y):S(leftAnimatePower) :(hp) +1 F1/(maxRevive);
+      !!SN:T^dal.str.animateMain^/?(hint:z)/^num^/(numRevive)/^mon^/(targetMonName);
       !!MM:M(hint);
     !!el;
       !!VR(currIsPlural:y):S(currNum) -1 B;
       !!BMi^battle_current_stack^:T?(currType:y);
       !!SN:H^monname^/(currType)/(currIsPlural)/?(currMonName:z);
-      !!VR(targetIsPlural:y):S(targetInitNum) -1 B;
-      !!BM(targetStack):T?(targetType:y);
-      !!SN:H^monname^/(targetType)/(targetIsPlural)/?(targetMonName:z);
-      !!SN:T^dal.str.mendNotEnough%(currIsPlural)^/?(hint)/^currMon^/(currMonName)/^targetMon^/(targetMonName);
+      !!SN:T^dal.str.animateNotEnough%(currIsPlural)^/?(hint)/^currMon^/(currMonName)/^targetMon^/(targetMonName);
       !!MM:M(hint);
     !!en;
   !!en;
@@ -157,21 +143,21 @@ ZVSE2
 !!en;
 
 !!BMi^battle_current_stack^:T?(currType:y);
-!!FU(dal_GetMonMendingPower):P(currType)/?(mendPower:y);
+!!FU(dal_GetMonAnimateUndeadPower):P(currType)/?(animatePower:y);
 
-; If it is a mender
-!!if&(mendPower)>0;
-  ; Check if the target is a construct
-  !!BM(targetStack):T?(targetType:y);
-  !!FU(dal_CheckIfMonIsConstruct):P(targetType)/?(isConstruct:y);
-  !!FU&(isConstruct)<>(TRUE):E;
+; If it is a Necromancer
+!!if&(animatePower)>0;
+  ; Check if the target is undead
+  !!BM(targetStack):F?(flags:y);
+  !!VR(isUndead:y):S(flags) &(MON_FLAG_UNDEAD);
+  !!FU&(isUndead)=0:E;
 
-  ; Get the total mending power
+  ; Get the total animating power
   !!BMi^battle_current_stack^:N?(currNum:y);
-  !!VR(totalMendPower:y):S(currNum) *(mendPower);
+  !!VR(totalAnimatePower:y):S(currNum) *(animatePower);
   !!BM(targetStack):H?(hp:y);
 
-  !!if&(totalMendPower)>=(hp);  
+  !!if&(totalAnimatePower)>=(hp);
     !!BM(targetStack):P?(targetPos:y);
 
     ; Pass the turn
@@ -201,12 +187,12 @@ ZVSE2
     ; Sound
     !!SN:P^resurect^;
     ; Animation
-    *!FU(dal_PlayCustomAnimationOnStack):P^mend.def^/(targetStack)/1;
+    *!FU(dal_PlayCustomAnimationOnStack):P^animate.def^/(targetStack)/1;
     !!BM(targetStack):V50;
 
     ; If the stack has been killed completely
     !!if&(targetNum)<=0;
-      !!FU(dal_ResurrectedDeadStack):P(targetStack)/(totalMendPower);
+      !!FU(dal_ResurrectedDeadStack):P(targetStack)/(totalAnimatePower);
       !!BM(targetStack):N?(numRevive:y);
     ; If the stack is still alive
     !!el;
@@ -214,24 +200,24 @@ ZVSE2
       !!BM(targetStack):L?(lostHp:y);
       !!VR(totalLostHp:y):S(targetInitNum) -(targetNum) *(hp) +(lostHp);
 
-      ; If total mending power is greater than the total lost, fully regenerate the target
-      !!if&(totalMendPower)>=(totalLostHp);
+      ; If total animating power is greater than the total lost, fully regenerate the target
+      !!if&(totalAnimatePower)>=(totalLostHp);
         !!BM(targetStack):N(targetInitNum) L0;
         !!VR(numRevive):S(targetInitNum) -(targetNum);
       ; If not full, here comes the three situations
       !!el;
         ; Regenerate some HP and revive one
-        !!if&(totalMendPower)=(lostHp);
+        !!if&(totalAnimatePower)=(lostHp);
           !!BM(targetStack):L0;
           !!VR(numRevive):S1;
         ; Rengenerate some HP and revive more
         !!el;
-          !!VR(leftMendPower:y):S(totalMendPower) -(lostHp);
+          !!VR(leftAnimatePower:y):S(totalAnimatePower) -(lostHp);
 
-          !!VR(numRevive:y):S(totalMendPower) :(hp);
-          !!VR(leftMendPower):S(totalMendPower) %(hp);
-          !!VR(leftMendPower): -(lostHp);
-          !!VR(lostHpNew:y):S(hp) -(leftMendPower);
+          !!VR(numRevive:y):S(totalAnimatePower) :(hp);
+          !!VR(leftAnimatePower):S(totalAnimatePower) %(hp);
+          !!VR(leftAnimatePower): -(lostHp);
+          !!VR(lostHpNew:y):S(hp) -(leftAnimatePower);
           !!BM(targetStack):L(lostHpNew);
         !!en;
 
@@ -239,14 +225,15 @@ ZVSE2
       !!en;
     !!en;
 
-    ; Reduce the spell number of the mender
+    ; Reduce the spell number of the Necromancer
     !!VR(spells):-1;
     !!BMi^battle_current_stack^:E(spells);
 
     ; Battle log
+    !!BM(targetStack):T?(targetType:y);
     !!VR(isPlural:y):S(numRevive) -1 B;
     !!SN:H^monname^/(targetType)/(isPlural)/?(monName:z);
-    !!SN:T^dal.str.mend%(isPlural)^/?(battleLog:z)/^num^/(numRevive)/^mon^/(monName);
+    !!SN:T^dal.str.animate%(isPlural)^/?(battleLog:z)/^num^/(numRevive)/^mon^/(monName);
     !!MM:S(battleLog);
 
     ; Change the cursor to question mark

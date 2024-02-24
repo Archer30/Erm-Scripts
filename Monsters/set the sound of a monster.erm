@@ -3,11 +3,11 @@ ZVSE2
 ; Engine:   ERM 2.0+
 ; Requires: ERA 3.3+, Era Erm Framework
 
-; Change the prefix of sound being used of creatures
+; Set the prefix of creature's sound
 
 
-!?FU(sound_ChangeMonSound);
-!#VA(mon:x);                            [Integer. ID of the creature]
+!?FU(sound_SetMonsterSound);
+!#VA(mon:x);                            [Integer. ID of creature]
 !#VA(prefix:x);                         [String. 4 characters prefix of the sound effect]
 
 !!UN:C4697553/4/?(monInfoTable:y);
@@ -18,4 +18,4 @@ ZVSE2
 ; ========================== TESTING ==========================
 
 !?FU(OnAfterErmInstructions);
-!!FU(sound_ChangeMonSound):P(MON_PIKEMAN)/^ANGL^;
+!!FU(sound_SetMonsterSound):P(MON_PIKEMAN)/^ANGL^;

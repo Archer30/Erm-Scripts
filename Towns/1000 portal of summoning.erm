@@ -1,0 +1,164 @@
+ZVSE2
+; Author:   Archer30
+; Idea:     Hawaiing
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Replace Portal of Summoning from Dungeon with Banner Workshop, provides a Warlord's Banner every week.
+; Set up your json before use!
+
+
+; ============== SETTINGS ==============
+!#VRi^banner_bannerPrice^:S1500;        [price of Warlord's Banner from Banner Workshop]
+; ============ END SETTINGS ============
+
+
+!?FU(OnGameEnter);
+; rename Portal of Summoning to Banner Workshop
+!!UN:C6968620/(UNC_INT)/?(ptr:y);       [name of Portal of Summoning]
+!!SN:B(ptr)/d/^%T(eighth.workshopName)^;
+!!UN:C6977892/(UNC_INT)/?(ptr);         [description of Portal of Summoning]
+!!SN:B(ptr)/d/^%T(eighth.workshopDesc)^;
+
+!?FU(OnGameLeave);
+!!UN:C6968620/(UNC_INT)/?(ptr:y);       [name of Portal of Summoning]
+!!SN:B(ptr)/d/^%T(eighth.posName)^;
+!!UN:C6977892/(UNC_INT)/?(ptr);         [description of Portal of Summoning]
+!!SN:B(ptr)/d/^%T(eighth.posDesc)^;
+
+!?FU(OnAfterErmInstructions);
+!!VRi^banner_bannerOn^:S(TRUE);
+!!UN:P(WOG_OPT_STACK_EXPERIENCE)/?(stackExpEnabled:y) P234/?(bannerBanned:y);
+!!VRi^banner_bannerOn^|(stackExpEnabled)=(FALSE)/(bannerBanned)=(TRUE):S(FALSE);
+
+*******************************************************
+**** Banner Workshop (replace Portal of Summoning) ****
+*******************************************************
+; Banner Workshop now replaces Portal of Summoning
+; Provides one Warlord's Banner every week (not accumulated)
+
+; Refill Banner Workshop every Monday
+; Give free banner to AI heres when there is hero visiting/in town
+!?FU(OnEveryDay)&i^timerOnce^;
+!!FU(banner_SetUpBannerShop):P;
+
+!?FU(banner_SetUpBannerShop);
+!#VA(x:y) (y:y) (z:y);
+
+!!VR(x):S-1;
+
+!!re i;
+  !!UN:U(OBJ_TOWN)/(TOWN_DUNGEON)/-1/(x)/(y)/(z);
+  !!br&(x)<0;
+
+  !!CA(x)/(y)/(z):U?(townId:y) O?(owner:y);
+
+  ; refill banner workshop on Monday
+  !!VRi^banner_banner_%(townId)^&i^timerWeekDay^=1:S(TRUE);
+
+  ; give AI hero free banner if there is a visiting hero (high priority) /hero in town
+  !!co|i^banner_bannerOn^=(FALSE)/i^banner_banner_%(townId)^=(FALSE); [next town if banner is not available or not even enabeld]
+  !!co&(owner)<=(NO_OWNER);             [Next town if the town has no owner]
+
+  !!OW:I(owner)/?(isAi:y);              [check if the town belongs to AI]
+  !!CA0/(townId):B3/22;                 [check if Banner Workshop (Portal of Summoning) is built]
+  !!co|-1/(isAi)<>(TRUE);
+
+  !!CA0/(townId):H0/?(townHero:y);
+  !!CA0/(townId):H1/?(visitHero:y);
+
+  !!if&(visitHero)>(NO_HERO);        [give banner to visiting hero if there is one]
+    !!HE(visitHero):A4/(ART_WARLORDS_BANNER);
+    !!VRi^banner_banner_%(townId)^:S(FALSE); [set the banner quantity to 0]
+  !!el&(townHero)>(NO_HERO);            [give to town hero if no visiting hero]
+    !!HE(townHero):A4/(ART_WARLORDS_BANNER);
+    !!VRi^banner_banner_%(townId)^:S(FALSE);
+  !!en;
+!!en;
+
+!?FU(OnTownMouseClick)&i^mouse_item^=22/i^mouse_action^=(MOUSE_LMB_PRESSED);
+; Buy Walord's Banner from Banner Workshop
+!!CA(CURRENT_TOWN): T?(townType:y);
+!!FU&(townType)<>(TOWN_DUNGEON):E;      [clicking on dungeon (Portal of Summoning)]
+
+!!CM:R0;
+!!FU(banner_BuyBanner):P;
+
+; Skip other scripted features
+!!SN:Q;
+
+!?FU(banner_BuyBanner);
+!!CA(CURRENT_TOWN):U?(townId:y) H1/?(visitHero:y);
+
+; Check if there is a vistiing hero/if there is a banner available
+!!if&(visitHero)<=(NO_HERO);
+  !!SN:T^eighth.noHero^/?(noHero:z);
+  !!IF:Q1/(PIC_TYPE_ART)/(ART_WARLORDS_BANNER)/1^%(noHero)^;
+  !!FU:E;
+!!el&i^banner_banner_%(townId)^<>(TRUE);
+  !!SN:T^eighth.noBanner^/?(noBanner:z);
+  !!IF:Q1/(PIC_TYPE_ART)/(ART_WARLORDS_BANNER)/1^%(noBanner)^;
+  !!FU:E;
+!!en;
+
+; Check for gold
+!!VR(cost:y):Si^banner_bannerPrice^;    [cost of the banner]
+!!OW:R-1/6/?(gold:y);                   [gold of the player]
+
+; Set up text for differnt conditions of adffordable
+!!if&(cost)<(gold);
+  !!SN:T^eighth.bannerAsk^/?(condition:z);
+!!el;
+  !!SN:T^eighth.missRes^/?(condition);
+!!en;
+
+!!SN:T^eighth.bannerUI^/?(bannerUI:z)/^cost^/(cost)/^condition^/(condition);
+
+; Buy banner for the player if affordale or else
+!!if&(cost)<=(gold);
+  !!IF:Q1/(PIC_TYPE_ART)/(ART_WARLORDS_BANNER)/2^%(bannerUI)^; [Ask whether to buy]
+  !!FU&-1:E;
+
+  !!VR(goldNew:y):S(gold) -(cost);
+  !!OW:R(CURRENT_PLAYER)/(RES_GOLD)/(goldNew);                 [reduce gold]
+  !!UN:R4/(CURRENT_TOWN);
+
+  !!HE(visitHero):A4/(ART_WARLORDS_BANNER); [give banner]
+  !!VRi^banner_banner_%(townId)^:S(FALSE);
+  !!SN:T^eighth.purchased^/?(purchased:z);
+  !!IF:M^%(purchased)^;                   [msg of purchased]
+!!el;
+  !!IF:Q1/(PIC_TYPE_ART)/(ART_WARLORDS_BANNER)/1^%(bannerUI)^;
+!!en;
+
+
+// Json content
+Eng:
+{
+  "banner": {
+    "workshopName": "Banner Workshop",
+    "workshopDesc": "The Banner Workshop provides you Warlord's Banner with a fee.",
+    "posName": "Portal of Summoning",
+    "posDesc": "With the Portal of Summoning, you can recruit creatures from an externally flagged dwellings.",
+    "noHero": "Only visting heres may use the Banner Workshop.",
+    "noBanner": "Warlord's Banner is sold out. Please come again next week.",
+    "bannerUI": "{Buy a Warlord's Banner}\n\nResource cost:\n{~>SMALRES.def:6} @cost@\n\n@condition@",
+    "bannerAsk":  "Do you want to buy a Warlord's Banner?",
+    "purchased":  "Warlord's Banner purchased",
+  }
+}
+
+Chn:
+{
+  "banner": {
+    "workshopName": "战旗作坊",
+    "workshopDesc": "只需支付少量费用，你就可以从战旗作坊购买战神旗帜。",
+    "posName": "召唤之门",
+    "posDesc": "通过召唤之门，你能从被控制的野外生物巢穴招募生物。",
+    "noHero": "只有来访英雄才能用战旗作坊。",
+    "noBanner": "战神旗帜已售罄，请下周再来吧。",
+    "bannerUI": "{购买 战神旗帜}\n\n资源耗费：\n{~>SMALRES.def:6} @cost@\n\n@condition@",
+    "bannerAsk":  "你想购买战神旗帜吗？",
+    "purchased":  "战神旗帜已购买",
+  }
+}

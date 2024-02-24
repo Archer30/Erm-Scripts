@@ -1,0 +1,10 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Monster spells no longer bypass resistance check
+
+
+!?FU(OnGameEnter);
+!!UN:C5899743/(UNC_INT16)/(OPCODE_NOP_2); 5A05DF

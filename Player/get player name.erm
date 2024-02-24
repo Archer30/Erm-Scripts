@@ -1,0 +1,21 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Get a player's name in the game
+
+
+!?FU(arch_GetPlayerName);
+!#VA(playerInd:x) (playerName:x);
+
+!!UN:C(GAME_MANAGER)/(UNC_INT)/?(gameMgr:y);
+!!VR(playerNameAddr:y):S(playerInd) *360 +(gameMgr) +134044;
+!!SN:B(playerNameAddr)/d/?(playerNameStr:z);
+!!VR(playerName):Z(playerNameStr);
+
+; ========================== TESTING ==========================
+
+!?FU(OnAfterErmInstructions);
+!!FU(arch_GetPlayerName):P(PLAYER_RED)/?(playerNameStr:z);
+!!IF:M^%(playerNameStr)^;
