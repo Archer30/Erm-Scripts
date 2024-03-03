@@ -1,0 +1,43 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, WoG Scripts
+
+; Give bonuses to specific creatures when the battle happens on water.
+; Note that the bonuss would be overwritten by EA receiver (presenting in "Neutral stack experiences" - This would be fixed in the upcoming Era Assembly update). 
+; You would always want to execute your EA before BM recievers. 
+
+
+!?FU(WOG_BattleStack_InitParams);
+!#VA(stackId:x) (side:x);
+
+; Check if the creatue has Aqua Empowerment
+!!BM(stackId):T?(type:y);
+!!FU(aqua_CheckIfMonHasAquaEmpowerment):P(type)/?(result:y);
+
+; Check if the battlefield is on the sea
+!!if&(result);
+  !!TRi^battle_x^/i^battle_y^/i^battle_z^:T?(terrainType:y)/?t/?t/?t/?t/?t/?t/?t;
+
+  ; If it is, adapt the stats of the creature
+  !!if&(terrainType)=8;                 [8- water]
+    ; Attack
+    !!BM(stackId):A?(atk:y);
+    !!VR(atk):*3 :2;
+    !!BM(stackId):A(atk);
+    ; Defense
+    !!BM(stackId):D?(def:y);
+    !!VR(def):*3 :2;
+    !!BM(stackId):D(def);
+    ; Speed
+    !!BM(stackId):S?(spd:y);
+    !!VR(spd):+2;
+    !!BM(stackId):S(spd);
+  !!en;
+!!en;
+
+!?FU(aqua_CheckIfMonHasAquaEmpowerment);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+!!VR(result)&(mon)=(MON_WATER_ELEMENTAL):S(TRUE);

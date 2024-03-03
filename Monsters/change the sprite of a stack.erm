@@ -9,6 +9,7 @@ ZVSE2
 !?FU(model_BattleStack_ChangeModel);
 !#VA(stack:x);                          [Stack ID (0..41)]
 !#VA(value:x);                          [Monster ID or ert index number. The mode is determined by the value here. If the number is greater than 100000, it's an ert index, otherwise it's an monster ID.]
+!#VA(mode:x);                           [Mode 0: creature Id. Mode 1: ert index.]
 
 !!VR(mode):S0;
 !!VR(mode)&(value)>=100000:S1;          [100000 - min ert index numher]
@@ -23,7 +24,7 @@ ZVSE2
 !!en;
 
 !!BM(stack):G-13/?y11/d;
-!!SN:E5622208/2/(value);
+!!SN:E5622208/2/(value);55C9C0
 !!BM(stack):G-13/v1/d;                  [Reset off_356]
 !!UN:Cy11/4/?y13;                       [Restore off_356]
 !!VRy13:+4;
@@ -32,6 +33,6 @@ ZVSE2
 
 ; If the value is an ert index
 !!if&(mode)=1;
-  !!SN:E7824928/1/(value);
+  !!SN:E7824928/1/(value); 776620
   !!BM(value):G-70/v1/d;
 !!en;
