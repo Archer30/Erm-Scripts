@@ -1,0 +1,60 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Walk on different terrains like on the grass
+; Warning: This script may lead to performace issue as it triggers many times in AI thinking process
+; If it goes too bad, consider enable FU&i^timerIsAi^:E to soften the problem a bit.
+
+
+
+!?FU(move_CheckIfMonIsTerrainWalker);
+!#VA(mon:x) (terrain:x) (result:x);
+
+!!VR(result):S(FALSE);
+
+; ========================== TESTING ==========================
+; Sand
+!!if&(terrain)=1;
+  !!VR(result)&(mon)=(MON_CHAMPION):S(TRUE);
+
+; Snow
+!!el&(terrain)=3;
+  !!VR(result)&(mon)=(MON_CRUSADER):S(TRUE);
+
+; Swamp
+!!el&(terrain)=4;
+  !!VR(result)&(mon)=(MON_CAVALIER):S(TRUE);
+
+; Rough
+!!el&(terrain)=4;
+  !!VR(result)&(mon)=(MON_SWORDSMAN):S(TRUE);
+!!en;
+; ======================== END TESTING ========================
+
+
+!?FU(WOG_CreateERMHook);
+!#VA(setHook:x);
+
+!!SN:E(setHook)/1/4920524/(move_OnGetStepCost);
+
+!?FU(move_OnGetStepCost);
+*!FU&i^timerIsAi^:E;                    [Enable this line if AI turn becomes too slow]
+
+!#VA(hook:x);
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_EDI)/4/?(terrain:y);
+!!FU&(terrain)=0:E;
+
+!!OW:Ai^timerOwner^/?(hero:y);
+
+!!re i/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+  !!HE(hero):C0/i/?(type:y)/?(num:y);
+
+  !!if&(type)>(NO_MON)/(num)>0;
+    !!FU(move_CheckIfMonIsTerrainWalker):P(type)/(terrain)/?(result:y);
+
+    !!UN&(result):C(hook)/(STRUCT_HOOK_CONTEXT_EDI)/4/0;
+  !!en;
+!!en;

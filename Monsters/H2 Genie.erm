@@ -12,10 +12,13 @@ ZVSE2
 !!VR(chance):S0;
 !!VR(percent):S0;
 
+; ========================== TESTING ==========================
 !!if&(mon)=(MON_MASTER_GENIE);
   !!VR(chance):S10;                     [0 - 100]
   !!VR(percent):S50;                    [0 - 100]
 !!en;
+; ======================== END TESTING ========================
+
 
 !?FU(OnStackToStackDamage_Quit);
 !#VA(atkStack:x) (defStack:x) (finalDmgConst:x) (finalDmg:x) (basicDmg:x) (dmgBonus:x) (isDistant:x) (distanceArg:x) (isTheoretical:x);
