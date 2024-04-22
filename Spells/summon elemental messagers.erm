@@ -1,0 +1,140 @@
+ZVSE2
+; Author:   Algor and Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+** Summoning Spells:
+** - give messengers instead of elementals.
+** - have a “standard” calculation formula (SP*a+b)
+** - receive a 50% bonus if the hero has a sphere of the corresponding element.
+** - do not have a restriction on summoning only one type of creature in battle.
+; This script is extracted from ReMaigc.
+; It would be disabled if ReMagic or ACM is Enabled
+
+
+!?FU(OnAfterErmInstructions)&i^Advanced_Classes_Mod_Active^<>(TRUE);
+!!UN:P726/?(wogOption:y);
+!!FU&(wogOption):E;
+
+; Level
+!!SS(SPELL_FIRE_ELEMENTAL): L4;
+!!SS(SPELL_EARTH_ELEMENTAL):L5;
+!!SS(SPELL_WATER_ELEMENTAL):L3;
+!!SS(SPELL_AIR_ELEMENTAL):  L2;
+
+; Cost
+!!SS(SPELL_FIRE_ELEMENTAL): C0/32 C1/28 C2/24 C3/20;
+!!SS(SPELL_EARTH_ELEMENTAL):C0/40 C1/35 C2/30 C3/25;
+!!SS(SPELL_WATER_ELEMENTAL):C0/24 C0/21 C0/18 C0/15;
+!!SS(SPELL_AIR_ELEMENTAL):  C0/16 C0/14 C0/12 C0/10;
+
+; Effect
+!!SS(SPELL_FIRE_ELEMENTAL): P120  E0/240 E1/360 E2/480 E3/600;
+!!SS(SPELL_EARTH_ELEMENTAL):P150  E0/300 E1/300 E2/600 E3/750;
+!!SS(SPELL_WATER_ELEMENTAL):P90   E0/180 E1/180 E2/360 E3/450;
+!!SS(SPELL_AIR_ELEMENTAL):  P60   E0/120 E1/120 E2/240 E3/300;
+
+
+!?FU(OnStartOrLoad)&i^Advanced_Classes_Mod_Active^<>(TRUE); [после загрузки]
+!!UN:P726/?(wogOption:y);
+!!FU&(wogOption):E;
+
+!!UN:C5896327/(UNC_INT8)/?i^es_726_patch1^;
+!!UN:C5936848/(UNC_INT8)/?i^es_726_patch2^;
+
+!!UN:C5896327/(UNC_INT8)/235;                  [Отключение проверки типа призываемых элементалей]
+!!UN:C5936848/(UNC_INT8)/235;                  [большое спасибо Sav'у за пример...]
+
+
+!?FU(OnGameLeave)&i^Advanced_Classes_Mod_Active^<>(TRUE);
+!!UN:P726/?(wogOption:y);
+!!FU&(wogOption):E;
+
+!!UN:C5896327/(UNC_INT8)/i^es_726_patch1^;
+!!UN:C5936848/(UNC_INT8)/i^es_726_patch2^;
+
+!?FU(ES_CreateERMHook)&i^Advanced_Classes_Mod_Active^<>(TRUE);
+!#VA(address:x);
+
+!!UN:P726/?(wogOption:y);
+!!FU&(wogOption):E;
+
+!!SN:E(address)/1/5928230/(ES_726_OnCombatElementalSummonCount);
+
+!?FU(ES_726_OnCombatElementalSummonCount);
+!!UN:Cx1/(STRUCT_HOOK_CONTEXT_EBP)/4/?(ebp:y) C(ebp)/8/4/?(spellId:y);
+
+!!VR(newMonId:y):S(NO_MON);
+!!UN:C(ebp)/12/4/?(monId:y);
+!!VR(artId:y):S(NO_ART);
+
+!!if&(spellId)=(SPELL_FIRE_ELEMENTAL)/(monId)=(MON_FIRE_ELEMENTAL);
+  !!VR(newMonId):S(MON_FIRE_MESSENGER);
+  !!VR(artId:y):S(ART_ORB_OF_TEMPESTUOUS_FIRE);
+!!el&(spellId)=(SPELL_EARTH_ELEMENTAL)/(monId)=(MON_EARTH_ELEMENTAL);
+  !!VR(newMonId):S(MON_EARTH_MESSENGER);
+  !!VR(artId:y):S(ART_ORB_OF_SILT);
+!!el&(spellId)=(SPELL_WATER_ELEMENTAL)/(monId)=(MON_WATER_ELEMENTAL);
+  !!VR(newMonId):S(MON_WATER_MESSENGER);
+  !!VR(artId:y):S(ART_ORB_OF_DRIVING_RAIN);
+!!el&(spellId)=(SPELL_AIR_ELEMENTAL)/(monId)=(MON_AIR_ELEMENTAL);
+  !!VR(artId:y):S(ART_ORB_OF_THE_FIRMAMENT);
+  !!VR(newMonId):S(MON_AIR_MESSENGER);
+!!en;
+
+!!if&(newMonId)<>(NO_MON);
+  !!UN:C(ebp)/16/4/?(spellPwr:y) C(ebp)/20/4/?(skillLevel:y);
+  !!SS(spellId):E(skillLevel)/?(skillLevelEffect:y) P?(spellEffect:y);
+  !!VR(totalHp:y):S(spellPwr) *(spellEffect) +(skillLevelEffect);   [y13 - HP призванных существ (SP*P+E)]
+
+  !!VR(heroId:y):Si^battle_hero_%i(battle_current_side)^;
+  !!if&(heroId:y)<>(NO_HERO);
+    !!HE(heroId:y):A2/(artId)/?i/?n;
+    !!VR(totalHp:y)&n>0:*3 :2;                                      [+50% к HP призываемых посланников, если на герое надета Сфера соотв. стихии]
+  !!en;
+  !!MA:P(newMonId)/?(baseHp:y);[y20 - базовое здоровье призываемого существа]
+  !!VR(totalSummonCount:y):S(totalHp:y) :(baseHp);F1/(INT_MAX);
+  !!if&(totalSummonCount)>0;
+    !!VR(lostHp:y):S(totalHp:y) %(baseHp);
+    !!VR(totalSummonCount)&(lostHp): +1;
+  !!en;
+  !!VR(totalSummonCount):F1/(INT_MAX);
+  !!VR(monInfoOffset:y):S(newMonId) *116;
+  !!UN:Cx1/(STRUCT_HOOK_CONTEXT_ESI)/4/(totalSummonCount:y) C(ebp)/12/4/(newMonId:y) C(ebp)/-28/4/(monInfoOffset:y); [set new mon count and id to summon and text]
+!!en;
+
+
+// Adapt Summon Elementals (wog option 74)
+// The following lines must be executed later than the functions with the same name in 4 wog - summon elementals.erm
+!?FU(OnAfterErmInstructions)&i^wog_74_enabled^/i^Advanced_Classes_Mod_Active^<>(TRUE);
+!!UN:P726/?(wogOption:y); 
+!!FU&(wogOption):E;
+
+!!VRi^wog_74_mon_%(SPELL_AIR_ELEMENTAL)^:S(MON_AIR_MESSENGER);
+!!VRi^wog_74_mon_%(SPELL_EARTH_ELEMENTAL)^:S(MON_EARTH_MESSENGER);
+!!VRi^wog_74_mon_%(SPELL_WATER_ELEMENTAL)^:S(MON_WATER_MESSENGER);
+!!VRi^wog_74_mon_%(SPELL_FIRE_ELEMENTAL)^:S(MON_FIRE_MESSENGER);
+
+!?FU(WOG_74_GetSummonQty)&i^Advanced_Classes_Mod_Active^<>(TRUE);
+!#VA(hero:x) (spell:x) (level:x) (qty:x);
+
+!!UN:P726/?(eraOption:y); 
+!!FU&(eraOption):E;
+
+!!SS(spell):E(level)/?(effect:y) P?(spellPwr:y);
+!!HE(hero):Fd/d/?(pwr:y)/d;
+!!VR(totalHp:y):S(pwr) *(spellPwr) +(effect);
+
+; Calculate bonus from Artifacts
+!!HE(hero):A2/(ART_ORB_OF_THE_FIRMAMENT)/?i/?(hasAirOrb:y) A2/(ART_ORB_OF_DRIVING_RAIN)/?i/?(hasWaterOrb:y) A2/(ART_ORB_OF_TEMPESTUOUS_FIRE)/?i/?(hasFireOrb:y) A2/(ART_ORB_OF_SILT)/?i/?(hasEarthOrb:y);
+!!VR(totalHp)&(spell)=(SPELL_FIRE_ELEMENTAL)/(hasAirOrb)>0:*3 :2;
+!!VR(totalHp)&(spell)=(SPELL_EARTH_ELEMENTAL)/(hasEarthOrb)>0:*3 :2;
+!!VR(totalHp)&(spell)=(SPELL_WATER_ELEMENTAL)/(hasWaterOrb)>0:*3 :2;
+!!VR(totalHp)&(spell)=(SPELL_AIR_ELEMENTAL)/(hasAirOrb)>0:*3 :2;
+
+!!MA:Pi^wog_74_mon_%(spell)^/?(hp:y);
+!!VR(qty):S(totalHp) :(hp) +1;
+
+; Fix quantity in particular cases
+!!VR(lostHp:y):S(totalHp) %(hp) -(hp) *-1;
+!!VR(qty)|(hp)=(lostHp)/(lostHp)=0:-1;

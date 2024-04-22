@@ -8,7 +8,6 @@ ZVSE2
 ; If it goes too bad, consider enable FU&i^timerIsAi^:E to soften the problem a bit.
 
 
-
 !?FU(move_CheckIfMonIsTerrainWalker);
 !#VA(mon:x) (terrain:x) (result:x);
 
@@ -48,6 +47,7 @@ ZVSE2
 !!FU&(terrain)=0:E;
 
 !!OW:Ai^timerOwner^/?(hero:y);
+!!FU&(hero)=(NO_HERO):E;
 
 !!re i/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
   !!HE(hero):C0/i/?(type:y)/?(num:y);

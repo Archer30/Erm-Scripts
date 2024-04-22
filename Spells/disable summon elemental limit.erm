@@ -1,0 +1,12 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.0+, Era Erm Framework
+
+; Disable the single type limit of Summon Elemental spells
+
+
+!?FU(OnGameEnter);
+!!UN:C5928150/4/(OPCODE_NOP_4);
+!!UN:C5928154/2/(OPCODE_NOP_2);
+!!UN:C5928156/1/(OPCODE_NOP_1);

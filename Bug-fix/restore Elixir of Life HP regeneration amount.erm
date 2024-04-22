@@ -1,0 +1,12 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Disable full health regeneration of Elixir of Life (now it regenerates 50 HP like in the vanilla game)
+; This fix the inconsistency with some regenreating abilities
+
+
+!?FU(OnGameEnter);
+!!UN:C4484142/1/185 C4484143/4/50;
+!!UN:C4484147/1/131 C4484148/2/13048;

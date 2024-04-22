@@ -1,0 +1,16 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Disable the defatl Fire Shield of Sacred Phoenix
+
+
+!?FU(OnGameEnter);
+; Disable Sacred Phoenix Fire Shield
+!!UN:C7727244/2/5611; 75E88C
+!!UN:C7735029/2/5611;
+
+; Disable War Zealot Magic Mirror
+!!UN:C7727488/1/235;
+!!UN:C7735352/1/235;

@@ -1,0 +1,11 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; guarantee lifesteal for blood dragons
+
+
+!?FU(OnGameEnter);
+; guarantee lifesteal for blood dragons
+!!UN:C7695727/1/235;
