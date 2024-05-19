@@ -1,0 +1,45 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Scouting bonuses for Rooks and Ravens
+
+
+// Hook
+!?FU(WOG_CreateERMHook);
+; Scouting
+!!SN:E(setHook)/1/5129161/(scout_OnGetScoutingRadius); [Trigger on getting the radius of Scouting] 004E43C9
+
+// Scouting Bonus (Monsters)
+; For Monsters: This script works only for +1 range and not other values, this is to reduce the amount of calculation executing, as this hook triggers pretty often
+!?FU(scout_OnGetScoutingRadius);
+!#VA(hook:x);
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_ESI)/(UNC_INT)/?(heroStruct:y);
+!!UN:C(heroStruct)/26/(UNC_INT)/?(heroId:y);
+
+!!VR(scoutingBonus:y):S0;
+
+// Rook and Raven's Scouting Range +1
+!!re i/(ARMY_SLOT_FIRST)/(ARMY_SLOT_LAST);
+  !!HE(heroId):C0/i/?(type:y)/?(num:y);
+
+  !!if&(type)>(NO_MON)/(num)>0;
+    !!FU(scout_CheckIfMonHasScoutingRangePlusOne):P(type)/?(result:y);
+
+    !!if&(result);
+      !!VR(scoutingBonus):+1;
+
+      !!br;
+    !!en;
+  !!en;
+!!en;
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_EAX)/(UNC_INT)/d(scoutingBonus);
+
+!?FU(scout_CheckIfMonHasScoutingRangePlusOne);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+!!VR(result)|(mon)=(MON_ROOK)/(mon)=(MON_RAVEN):S(TRUE);

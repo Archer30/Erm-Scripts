@@ -1,0 +1,51 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Get all the heroes can't cast their spell of specialty at the start of the game due to lacking spell points.
+
+
+!?FU(OnEveryDay)&i^timerDay^=1/i^timerOnce^;
+*?FU(OnAfterErmInstructions);
+!!re i/(HERO_FIRST)/(HERO_LAST_WOG);
+  !!HEi:X?(type:y)/?(spell:y);
+
+  !!if&(type)=3;
+    !!SS(spell):S?(schoolFlags:y);
+    !!VR(isAir:y):S(schoolFlags) &1;
+    !!VR(isFire:y):S(schoolFlags) &2;
+    !!VR(isWater:y):S(schoolFlags) &4;
+    !!VR(isEarth:y):S(schoolFlags) &8;
+
+    ; Get the sec skill Id of the spell
+    ; If the spell belongs to different factions, it would be treated with this priority list:
+    ; Earth>Water>Air>Fire
+    !!VR(secSkill:y)&(isFire):S(SKILL_FIRE_MAGIC);
+    !!VR(secSkill)&(isAir):S(SKILL_AIR_MAGIC);
+    !!VR(secSkill)&(isWater):S(SKILL_WATER_MAGIC);
+    !!VR(secSkill)&(isEarth):S(SKILL_EARTH_MAGIC);
+
+    !!HEi:S(secSkill)/?(level:y);
+
+    !!SS(spell):C(level)/?(cost:y);
+    !!HEi:I?(currSpellPoints:y)/1;
+
+    ; ACM sorcery, adds additional spell costs for damaging spells
+    !!if&i^Advanced_Classes_Mod_Active^;
+      !!SS(spell):F?(spellFlags:y);
+      !!VR(isDmgSpell:y):S(spellFlags) &512;
+
+      !!if&(isDmgSpell);
+        !!HEi:S(SKILL_SORCERY)/?(sorceryLevel:y);
+        !!VR(cost):+(sorceryLevel);
+      !!en;
+    !!en;
+
+    !!if&(cost)>(currSpellPoints);
+      !!HEi:B0/?z2;
+      !!SN:H^spell^/(spell)/(SPELL_TEXT_NAME)/?z3;
+      !!IF:M^%z2 can't cast the spell of his/her specialty (%z3) due to lacking spell points.^;
+    !!en;
+  !!en;
+!!en;

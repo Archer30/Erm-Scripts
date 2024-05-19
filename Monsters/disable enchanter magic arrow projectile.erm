@@ -1,0 +1,10 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Disable magic arrow animation for Enchanter shooting projectiles
+
+
+!?FU(OnGameEnter);
+!!UN:C4452881/1/235;
