@@ -4,14 +4,25 @@ ZVSE2
 ; Requires: ERA 3.3+, Era Erm Framework
 
 ; A script for you to set up additoinal upgrades in town
-; Before setting upgrades here, you must set up upgrade in hill forts with MA:U
+; An upgrade is possible to perform when both the town type of the targeted monster match the current town and the corresponding level of upgraded dwelling is built
 
 
 !?FU(OnAfterErmInstructions);
 !!FU(NewIntArray):P?i^addupg_alternativesInTownList^/(M_STORED);
 ; ========================== TESTING ==========================
+; Set up non-upgraded monsters that you want to upgrade in town in the array
 ; Note that with each FU(Array_Push):P call, you can only add 15 creatures at max
-!!FU(Array_Push):Pi^addupg_alternativesInTownList^/(MON_PALADIN)/(MON_DRAGON_GOLEM);
+!!FU(Array_Push):Pi^addupg_alternativesInTownList^/(MON_PEASANT)/(MON_MAGMA_ELEMENTAL);
+
+// The following part is not needed if you set them in other places
+; Define upgrade chain in hill forts, both non-upgraded and upgraded monsters should be set
+!!MA:U(MON_PEASANT)/(MON_ROGUE);        [Peasant upgrade to Rogues in Hill Fort]
+!!MA:U(MON_MAGMA_ELEMENTAL)/(MON_EARTH_MESSENGER); [Magma Elemental upgrade to Earth Messagers in Hill Fort]
+
+; Define creature town type, only non-upgraded is needed, but defining both non-upg and upg is strongly recommended as makes more sense
+!!MA:O(MON_PEASANT)/(TOWN_CASTLE);      [Peasant belongs to Castle, so that they can be upgraded (to Rogues) in a Castle with upg. Guard House built]
+; Here we don't need to set the faction of Magma Elemental, as they belong to Conflux by default, right?
+!!MA:O(MON_MAGMA_ELEMENTAL)/(TOWN_CONFLUX); [You can still set it if you want to make sure]
 ; ======================== END TESTING ========================
 
 !?FU(OnDetermineMonInfoDlgUpgrade);
