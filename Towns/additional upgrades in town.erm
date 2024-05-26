@@ -1,0 +1,59 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; A script for you to set up additoinal upgrades in town
+; Before setting upgrades here, you must set up upgrade in hill forts with MA:U
+
+
+!?FU(OnAfterErmInstructions);
+!!FU(NewIntArray):P?i^addupg_alternativesInTownList^/(M_STORED);
+; ========================== TESTING ==========================
+; Note that with each FU(Array_Push):P call, you can only add 15 creatures at max
+!!FU(Array_Push):Pi^addupg_alternativesInTownList^/(MON_PALADIN)/(MON_DRAGON_GOLEM);
+; ======================== END TESTING ========================
+
+!?FU(OnDetermineMonInfoDlgUpgrade);
+!#VA(monType:x) (upgType:x) (townId:x) (hero:x);
+
+; Exit if universal upgrade is enabled
+!!UN:P174/?(uniUpg:y);
+!!FU&(uniUpg):E;
+
+; Exit if the monster has an existing upgrade or not in a town
+!!FU|(upgType)>(NO_MON)/(townId)=(NO_TOWN):E;
+
+; Exit if the monster cannot be upgraded in town
+!!FU(addupg_CheckIfMonCanBeUpgradedInTown):P(monType)/?(result:y);
+!!FU&(result)<>(TRUE):E;
+
+; Get the info of the monster and town
+; Exit if the town type doesn't match
+!!MA:O(monType)/?(ownerType:y);
+!!CA0/(townId):T?(townType:y);
+!!FU&(ownerType)<>(townType):E;
+
+; Exit if the corresponding level of dwelling isn't built
+!!MA:L(monType)/?(level:y);
+!!VR(buildingId:y):S(level) +37;
+!!CA0/(townId):B3/(buildingId);
+!!FU&-1:E;
+
+; Set up new upgrade
+!!FU(GetUpgradedMonster):P(monType)/?(upgType);
+
+!?FU(addupg_CheckIfMonCanBeUpgradedInTown);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S(FALSE);
+
+!!SN:Mi^addupg_alternativesInTownList^/?(size:y);
+
+!!re i/0/(size)/1/-1;
+  !!SN:Mi^addupg_alternativesInTownList^/i/?(listedMon:y);
+
+  !!br&(listedMon)=(mon);
+!!en;
+
+!!VR(result)&i<(size):S(TRUE);
