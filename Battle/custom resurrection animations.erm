@@ -1,0 +1,81 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Customise the animation of Resurrection/Animate Dead/Sacrifice
+; 1) Spellbook resurrection (and maybe sacrifice): remains white
+; 2) Archangel resurrection: becomes yellow
+; 3) Raise Undead (both from spellbook and from your script): becomes green
+; 4) Self-resurrection of phoenix type: becomes light-blue
+
+; Here we use a lazy way of implementation for monster spells (since there is no way to check what the current monster spell it):
+; Instead of multiple hooks, we assume that the spell casted by particular creatures is Resurrection/Animate Dead/Sacrifice 
+
+
+// Set up animation for all the resurrectoin spells
+!?FU(dal_GetMonResurrectionType);
+!#VA(mon:x) (result:x);
+
+!!VR(result):S0;
+!!VR(result)|(mon)=(MON_ARCHANGEL)/(mon)=(MON_SUPREME_ARCHANGEL):S1; [Yellow - monsters]
+!!VR(result)|(mon)=(MON_SOUL_EATER_A)/(mon)=(MON_SOUL_EATER_D):S2; [green - monsters]
+
+!?FU(OnBeforeBattleAction);
+; Exit if not casting
+!!BG:A?(action:y);
+!!FU&(action)<>(BATTLE_ACTION_MONSTER_CAST)/(action)<>(BATTLE_ACTION_HERO_CAST):E;
+
+; Reset the animation
+!!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbMgr:y);
+!!UN:C(cmbMgr)/78572/(UNC_INT)/-1;
+!!SN:B6836160/d/^C12SPE0.def^;
+
+!!VR(filename:z):S^^;
+
+; If it is a hero's spell, change the animation if it is Animate Dead
+!!if&(action)=(BATTLE_ACTION_HERO_CAST);
+  !!BG:S?(spell:y);
+  !!VR(filename)&(spell)=(SPELL_ANIMATE_DEAD):S^Sp06_.def^; [green - filename]
+
+; If it is a monster's spell, check the monster id to get the spell id
+!!el&(action)=(BATTLE_ACTION_MONSTER_CAST);
+  !!BMi^battle_acting_stack^:T?(type:y);
+  !!FU(dal_GetMonResurrectionType):P(type)/?(result:y);
+
+  !!if&(result)>0;
+    !!VR(filename)&(result)=1:S^Sp01_.def^; [yellow - filename]
+    !!VR(filename)&(result)=2:S^Sp06_.def^; [green - filename]
+  !!en;
+!!en;
+
+; Set new animation filename
+!!if&(filename)<>^^;
+  !!SN:B6836160/d/^%(filename)^;
+!!en;
+
+; Restore the animaion on turn end
+!?FU(OnBattleActionEnd)&i^dal_resurrectionAnimationReplaced^;
+!!VRi^dal_resurrectionAnimationReplaced^:S(FALSE);
+!!SN:B6836160/d/^C12SPE0.def^;
+!!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbMgr:y);
+!!UN:C(cmbMgr)/78572/(UNC_INT)/-1;
+
+// Set up new animation for Phoenix Rebirth
+!?FU(gem_CreateERMHook);
+!#VA(setHook:x);
+
+!!SN:E(setHook)/1/4624553/(dal_HOOK_PhoenixResurrection);
+!!SN:E(setHook:x)/1/4624789/(dal_OnAfterPhoenixResurrection);
+
+!?FU(dal_HOOK_PhoenixResurrection)&i^battle_isVisible^;
+!!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbMgr:y);
+!!UN:C(cmbMgr)/78572/(UNC_INT)/-1;
+!!SN:B6836160/d/^Sp12_.def^;            [blue - filename]
+!!VRi^dal_resurrectionAnimationReplaced^:S(TRUE);
+
+!?FU(dal_OnAfterPhoenixResurrection)&i^dal_resurrectionAnimationReplaced^;
+!!VRi^dal_resurrectionAnimationReplaced^:S(FALSE);
+!!SN:B6836160/d/^C12SPE0.def^;
+!!UN:C(COMBAT_MANAGER)/(UNC_INT)/?(cmbMgr:y);
+!!UN:C(cmbMgr)/78572/(UNC_INT)/-1;
