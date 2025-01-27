@@ -1,0 +1,21 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, WoG Scripts
+
+; Get the coordinates of the grail.
+
+
+; ========================== TESTING ==========================
+!?FU(OnKeyPressed)&i^key^=(KEY_9);
+!!FU(grail_GetPosOfGrail):P?(x:y)/?(y:y)/?(z:y);
+!!IF:M^The grail is hidden in %(x)/%(y)/%(z).^;
+; ======================== END TESTING ========================
+
+!?FU(grail_GetPosOfGrail);
+!#VA(x:x) (y:x) (z:x);
+
+!!UN:C(GAME_MANAGER)/4/?(gameManager:y);
+!!UN:C(gameManager)/128656/2/?(x);
+!!UN:C(gameManager)/128658/2/?(y);
+!!UN:C(gameManager)/128660/1/?(z);

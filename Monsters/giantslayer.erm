@@ -1,0 +1,39 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework
+
+; Deals extra damage to level 7s (like Slayer)
+
+
+!?FU(OnStackToStackDamage);
+!#VA(atkStack:x) (defStack:x) (finalDmgConst:x) (finalDmg:x) (basicDmg:x) (dmgBonus:x) (isDistant:x) (distanceArg:x) (isTheoretical:x);
+
+; Exit if the defender is not level 7
+!!BM(defStack):T?(defMon:y);
+!!FU&(defMon)<=(NO_MON):E;              [For some reason, this can be -1]
+
+!!MA:L(defMon)/?(level:y);
+!!FU&(level)<>(MON_MAX_LEVEL):E;
+
+; Exit if the attacker is not a giant slayer
+!!BM(atkStack):T?(atkMon:y);
+!!FU(aum_GetGiantslayerBonus):P(atkMon)/?(bonus:y);
+!!FU&(bonus)=0:E;
+
+!!VR(bonusDmg:y):S(basicDmg) *(bonus) :100;
+
+!!if&(bonusDmg)>0;                      [overflow check]
+  !!VR(newfinalDmg:y):S(finalDmg) +(bonusDmg);
+
+  !!if&(newfinalDmg)>(finalDmg);        [overflow check]
+    !!VR(finalDmg):S(newfinalDmg);
+  !!en;
+!!en;
+
+; Get the additional damage dealt to level 7 nmonsters
+!?FU(aum_GetGiantslayerBonus);          [in percentage]
+!#VA(mon:x) (result:x);
+
+!!VR(result):S0;
+!!VR(result)&(mon)=(MON_HALFLING):S100;

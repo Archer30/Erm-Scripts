@@ -13,7 +13,7 @@ ZVSE2
 !!en;
 
 // The following is for the compatibility with artifacts from Emerald
-!?FU(OnAdvMapTileHint);
+!?FU(OnAdventureMapTileHint);
 !#VA(x:x) (y:x) (z:x) (objType:x) (objSubtype:x);
 
 !!FU&(objType)<>(OBJ_ARTIFACT):E;

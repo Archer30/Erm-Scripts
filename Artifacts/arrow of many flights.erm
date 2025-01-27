@@ -1,0 +1,91 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.3+, Era Erm Framework, WoG Scripts
+
+; Gold Tower Arrow now enables additional shots for your ranged units.
+
+
+; ========================== TESTING ==========================
+!#VRi^flights_art^:S(ART_GOLD_TOWER_ARROW); [Artifact with multi-shot ability]
+!#VRi^flights_shots^:S1;                [Number of shots]
+; ======================== END TESTING ========================
+
+
+!?FU(WOG_CreateERMHook);
+!#VA(setHook:x);
+
+!!SN:E(setHook)/1/4456346/(many_OnPostShoort);
+
+!?FU(many_OnPostShoort);
+!#VA(hook:x);
+
+; Manage stack Ids
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_ESI)/4/?(atkStackStruct:y);
+!!UN:C(atkStackStruct)/244/4/?(atkSide:y) C(atkStackStruct)/248/4/?(atkStackOfSide:y);
+!!VR(atkStack:y):S(atkSide) *(BATTLE_STACKS_PER_SIDE) +(atkStackOfSide);
+
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_EBP)/4/?(ptr:y);
+!!UN:C(ptr)/-4/4/?(defStackStruct:y);
+!!UN:C(defStackStruct)/244/4/?(defSide:y) C(defStackStruct)/248/4/?(defStackOfSide:y);
+!!VR(defStack:y):S(defSide) *(BATTLE_STACKS_PER_SIDE) +(defStackOfSide);
+
+; Exit if not ranged
+!!BG:A?(action:y);
+!!FU&(action)<>(BATTLE_ACTION_SHOOT):E;
+
+; Exit if the attacking stack/defending stack is not valid
+!!BG:E?(targetStack:y);
+!!FU&(targetStack)=(NO_STACK):E;
+
+; Exit if the stack ids don't match
+!!FU|i^battle_acting_stack^<>(atkStack)/(defStack)<>(targetStack):E;
+
+!!BM(atkStack):N?(atkNum:y);
+!!BM(defStack):N?(defNum:y);
+!!FU|(atkNum)<=0/(defNum)<=0:E;
+
+; Exit if the owner of the attacking stack doesn't have the idea artifact
+!!FU(flights_GetActualStackSide):P(atkStack)/?(actualSide:y);
+!!FU&i^battle_hero_%(actualSide)^=(NO_HERO):E;
+
+!!HEi^battle_hero_%(actualSide)^:A2/i^flights_art^/?(has:y)/?(equipped:y);
+!!FU&(equipped)<=0:E;
+
+; Exit for war machines
+!!BM(atkStack):T?(atkType:y);
+!!FU&(atkType)>=(MON_CATAPULT)/(atkType)<=(MON_ARROW_TOWERS):E;
+
+; Exit if not possilble to shoot for some reason 
+!!BM(atkStack):Z?(stackPtr:y);
+!!SN:E4466192/(CALLCONV_THISCALL)/(stackPtr)/0;
+!!FU&v1=0:E;
+
+; Shoot
+!!BM(atkStack):F?(flags:y);
+!!VR(canAttackTwice:y):S(flags) &(MON_FLAG_ATTACKS_TWICE);
+!!BM(atkStack)&(canAttackTwice):Fd~(MON_FLAG_ATTACKS_TWICE);
+
+!!re i/1/i^flights_shots^;
+  !!FU(BattleStack_Shoot):P(atkStack)/(defStack);
+
+  ; Break the loop if any has been killed or not possilble to shooot
+  !!BM(atkStack):N?(atkNum:y);
+  !!BM(defStack):N?(defNum);
+  !!br|(atkNum)<=0/(defNum)<=0;
+
+  !!SN:E4466192/(CALLCONV_THISCALL)/(stackPtr)/0;
+  !!br&v1=0;
+!!en;
+
+!!BM(atkStack)&(canAttackTwice):Fd|(MON_FLAG_ATTACKS_TWICE);
+
+****************************************
+**** Get the actual side of a stack ****
+****************************************
+; The stack side would be reverted if the stack is hypnotized
+!?FU(flights_GetActualStackSide);
+!#VA(stack:x) (side:x);
+
+!!BM(stack):I?(side) G(SPELL_HYPNOTIZE)/?(hypnotizeTurns:y)/d;
+!!VR(side)&(hypnotizeTurns)>0:X(TRUE);

@@ -53,11 +53,11 @@ ZVSE2
 ** Set the damage of the Ice Bolt attack from Santas
 !?FU(OnMagicCorrectedResistance);
 
-!!BG:A?(action:y) S?(spell:y) N?(stack:y); [Get Action, Spell Number and Creature Number]
+!!BG:A?(action:y) N?(stack:y); [Get Action, Spell Number and Creature Number]
 !!BM(stack):T?(mon:y) N?(num:y);           [Get Creature Type and Number of Creatures]
 !!MR:F?(dmg:y);
 
-!!if&(action)=10/(spell)=16/(mon)=173/(dmg)>0/(num)>0; [If Santa Gremlins casting Ice Bolt]
+!!if&(action)=10/(mon)=173/(dmg)>0/(num)>0; [If Santa Gremlins casting Ice Bolt]
   !!VR(dmgNew:y):S(num) *i^Santas_damage_scaling^; [calc new damage]
   !!MR:F(dmgNew);                       [Set new Damage]
 !!en;
