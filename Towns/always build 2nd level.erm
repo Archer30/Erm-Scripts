@@ -6,23 +6,11 @@ ZVSE2
 ; Loop through all towns at day 1 and build 2nd level dwellings for towns with forts, owner and 1st level dwellings.
 
 
-; ============== SETTINGS ==============
-!#VRi^always2lv_on^:S(TRUE);            [This script will be activated only if true]
-; ============ END SETTINGS ============
-
-
-!?FU(always2lv_RestrainValues);
-!!VRi^always2lv_on^:F(FALSE)/(TRUE);
-
-!#FU(always2lv_RestrainValues):P;
-
-!?FU(OnEveryDay)&i^timerOnce^/i^timerDay^=1/i^always2lv_on^;
-!!FU(always2lv_BuildDwellings):P;
-
-!?FU(always2lv_BuildDwellings);
+; Day 1
+!?FU(OnEveryDay)&i^timerOnce^/i^timerDay^=1;
 !!VR(x:y):S-1;
 
-; loop through all towns
+; loop through all the towns
 !!re i;
   !!UN:U(OBJ_TOWN)/(ANY_OBJ)/-1/(x)/(y:y)/(z:y);
   !!br&(x)<0;

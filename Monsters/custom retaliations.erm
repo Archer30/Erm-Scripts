@@ -1,0 +1,49 @@
+ZVSE2
+; Author:   Archer30
+; Engine:   ERM 2.0+
+; Requires: ERA 3.9.3+, Era Erm Framework, WoG Scripts
+
+; Customize the retaliation count of a stack.
+; If a stack is linked to a global variable, configure the variable before FU(WOG_BattleStack_InitParams) 43D6CB runs in this script.
+
+
+!?FU(retal_GetStackCustomRetaliations);
+!#VA(stack:x) (counter:x);
+
+!!VR(counter):S0;
+!!BM(stack):T?(type:y);
+
+; ========================== TESTING ==========================
+!!VR(counter)&(mon)=(MON_GORYNYCH):S3;
+; ======================== END TESTING ========================
+
+
+!?FU(WOG_CreateERMHook);
+!#VA(setHook:x);
+
+!!SN:E(setHook)/1/4484764/(retal_InNewRoundSetRetalatiations); 446E9C
+
+!?FU(retal_InNewRoundSetRetalatiations);
+!#VA(hook:x);
+
+; Get the structure of the stack
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_ECX)/4/?(stackStruct:y);
+
+; Exit if the creature does not have a custom retaliation defined
+!!UN:C(stackStruct)/244/4/?(side:y) C(stackStruct)/248/4/?(stackOfSide:y);
+!!VR(stack:y):S(side) *(BATTLE_STACKS_PER_SIDE) +(stackOfSide);
+!!FU(retal_GetStackCustomRetaliations):P(stack)/?(retaliations:y);
+!!FU&(retaliations)=0:E;
+
+; Set retaliations
+!!UN:C(stackStruct)/1108/4/(retaliations);
+
+!?FU(WOG_BattleStack_InitParams);
+!#VA(stack:x) (side:x);
+
+; Exit if the stack does not have a custom retaliation defined
+!!FU(retal_GetStackCustomRetaliations):P(stack)/?(retaliations:y);
+!!FU&(retaliations)=0:E;
+
+; Set retaliations
+!!BM(stack):R(retaliations);

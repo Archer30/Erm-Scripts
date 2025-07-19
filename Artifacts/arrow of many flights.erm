@@ -53,8 +53,9 @@ ZVSE2
 !!FU&(equipped)<=0:E;
 
 ; Exit for war machines
-!!BM(atkStack):T?(atkType:y);
-!!FU&(atkType)>=(MON_CATAPULT)/(atkType)<=(MON_ARROW_TOWERS):E;
+!!BM(atkStack):F?(flags:y);
+!!VR(isSiegeWeapon:y):S(flags) &(MON_FLAG_SIEGE_WEAPON);
+!!FU&(isSiegeWeapon):E;
 
 ; Exit if not possilble to shoot for some reason 
 !!BM(atkStack):Z?(stackPtr:y);
