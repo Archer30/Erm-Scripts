@@ -14,7 +14,7 @@ ZVSE2
 !!BM(stack):T?(type:y);
 
 ; ========================== TESTING ==========================
-!!VR(counter)&(mon)=(MON_GORYNYCH):S3;
+!!VR(counter)&(type)=(MON_GORYNYCH):S3;
 ; ======================== END TESTING ========================
 
 
@@ -27,7 +27,7 @@ ZVSE2
 !#VA(hook:x);
 
 ; Get the structure of the stack
-!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_ECX)/4/?(stackStruct:y);
+!!UN:C(hook)/(STRUCT_HOOK_CONTEXT_ESI)/4/?(stackStruct:y);
 
 ; Exit if the creature does not have a custom retaliation defined
 !!UN:C(stackStruct)/244/4/?(side:y) C(stackStruct)/248/4/?(stackOfSide:y);
